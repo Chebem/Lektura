@@ -7,6 +7,7 @@ import ChatbotPanel from './components/ChatbotPanel/ChatbotPanel.jsx';
 import FlashcardDeck from './components/FlashcardDeck/FlashcardDeck.jsx';
 import QuizDeck from './components/QuizDeck/QuizDeck.jsx';
 import HoverButton from './components/HoverButton/HoverButton.jsx';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx';
 import {
   checkProvider,
   uploadDocument,
@@ -204,7 +205,7 @@ export default function App() {
               S
             </span>
             <div>
-              <div className="app__title">StudyBridge</div>
+              <div className="app__title">Lektura</div>
               <div className="app__subtitle">
                 {docMeta
                   ? `${docMeta.name}${
@@ -279,6 +280,7 @@ export default function App() {
       ) : null}
 
       <main className="app__body">
+        <ErrorBoundary resetKey={activeTab}>
         {activeTab === 'document' ? (
           <div
             className={`workspace${showChat ? ' workspace--with-chat' : ''}`}
@@ -399,6 +401,7 @@ export default function App() {
             />
           </div>
         ) : null}
+        </ErrorBoundary>
       </main>
     </div>
   );

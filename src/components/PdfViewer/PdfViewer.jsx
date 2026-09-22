@@ -45,12 +45,13 @@ export default function PdfViewer({ file, onDocumentLoad }) {
         const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
 
         if (cancelled) {
-          doc.destroy();
+          Promise.resolve(doc.destroy()).catch(() => {});
           return;
         }
 
-        docRef.current?.destroy();
+        const previous = docRef.current;
         docRef.current = doc;
+        Promise.resolve(previous?.destroy()).catch(() => {});
 
         setPageCount(doc.numPages);
         setPageNumber(1);
@@ -75,11 +76,32 @@ export default function PdfViewer({ file, onDocumentLoad }) {
   }, [file, onDocumentLoad]);
 
   // Destroy the document only when the viewer itself goes away.
+  //
+  // Every step is guarded: this cleanup runs during React's commit phase when
+  // the user switches tabs, and anything thrown here would unmount the entire
+  // app rather than just this panel. destroy() also returns a promise that
+  // can reject once a render has been cancelled, so its rejection is absorbed
+  // too.
   useEffect(
     () => () => {
-      renderTaskRef.current?.cancel();
-      docRef.current?.destroy();
+      const task = renderTaskRef.current;
+      const doc = docRef.current;
+      renderTaskRef.current = null;
       docRef.current = null;
+
+      try {
+        task?.cancel();
+      } catch (error) {
+        console.warn('[PdfViewer] render cancel failed on unmount', error);
+      }
+
+      try {
+        Promise.resolve(doc?.destroy()).catch((error) => {
+          console.warn('[PdfViewer] document destroy rejected', error);
+        });
+      } catch (error) {
+        console.warn('[PdfViewer] document destroy threw', error);
+      }
     },
     [],
   );
