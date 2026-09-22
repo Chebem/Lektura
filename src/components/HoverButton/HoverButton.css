@@ -1,0 +1,108 @@
+/* Extends REFERENCE's .btn pill with the variants this app needs. */
+
+.hover-btn {
+  position: relative;
+  white-space: nowrap;
+}
+
+/* Accent — the primary call to action (generate, send, upload). */
+.hover-btn--accent {
+  background: var(--accent-solid);
+  color: var(--text-on-accent);
+}
+
+.hover-btn--accent:hover:not(:disabled) {
+  background: var(--accent-dark);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Ghost — low-emphasis controls sitting inside panel headers. */
+.hover-btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.hover-btn--ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-main);
+  border-color: var(--line-strong);
+  transform: none;
+}
+
+/* Quiet — icon-only nav (deck prev/next, page prev/next). */
+.hover-btn--quiet {
+  background: var(--surface-2);
+  color: var(--text-main);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  text-transform: none;
+}
+
+.hover-btn--quiet:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent-solid);
+  color: var(--accent-dark);
+  transform: none;
+}
+
+[data-theme='dark'] .hover-btn--quiet:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.hover-btn--quiet .hover-btn__label {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.hover-btn__icon {
+  display: inline-flex;
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* Busy state: the label dims and a spinner takes over, with no layout shift. */
+.hover-btn--busy {
+  color: transparent;
+}
+
+.hover-btn--busy::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  color: var(--text-on-accent);
+  animation: hover-btn-spin 0.7s linear infinite;
+}
+
+.hover-btn--busy.hover-btn--ghost::after,
+.hover-btn--busy.hover-btn--quiet::after,
+.hover-btn--busy.btn-outline::after {
+  color: var(--text-main);
+}
+
+@keyframes hover-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-btn--busy::after {
+    animation: none;
+    border-top-color: currentColor;
+    opacity: 0.4;
+  }
+}

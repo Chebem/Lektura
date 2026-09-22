@@ -1,0 +1,100 @@
+.deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 660px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-4) var(--space-5);
+}
+
+.deck__heading {
+  margin-bottom: 0;
+}
+
+.deck__counter {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.deck__term {
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 3.4vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--text-main);
+}
+
+.deck__definition {
+  font-size: var(--text-base);
+  line-height: 1.66;
+  color: var(--text-main);
+}
+
+.deck__source {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.deck__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  justify-content: center;
+}
+
+.deck__progress {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  max-width: 360px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.deck__pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  transition: background var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+
+.deck__pip--seen {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-solid);
+}
+
+.deck__pip--current {
+  background: var(--accent-solid);
+  border: none;
+  transform: scale(1.5);
+}
+
+.deck__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.deck__hint {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck__pip {
+    transition: none;
+  }
+}

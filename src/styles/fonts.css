@@ -1,0 +1,20 @@
+/**
+ * Chillax — the project's typeface, carried over from REFERENCE/Fonts.
+ * Designed by Manushi Parikh, © Indian Type Foundry (fontshare.com/fonts/chillax).
+ *
+ * Files live in /public/fonts/Chillax and are referenced by absolute path, so
+ * the bundler stays out of it (the same pattern REFERENCE uses).
+ *
+ * Only the variable face is loaded — it covers the whole 200–700 weight range
+ * in one file, which is lighter than six static faces.
+ */
+
+@font-face {
+  font-family: 'Chillax-Variable';
+  src: url('/fonts/Chillax/Chillax-Variable.woff2') format('woff2'),
+    url('/fonts/Chillax/Chillax-Variable.woff') format('woff'),
+    url('/fonts/Chillax/Chillax-Variable.ttf') format('truetype');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: normal;
+}

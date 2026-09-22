@@ -1,0 +1,29 @@
+.app__banner {
+  max-width: 1680px;
+  margin: var(--space-4) auto 0;
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: var(--text-sm);
+  width: calc(100% - var(--space-6));
+}
+
+.app__banner strong {
+  font-weight: 600;
+}
+
+.app__upload-error {
+  max-width: 1680px;
+  margin-inline: auto;
+  width: calc(100% - var(--space-6));
+}
+
+.app__chat-fab {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 30;
+  box-shadow: var(--shadow-lg);
+}

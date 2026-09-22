@@ -1,0 +1,200 @@
+/* GLOBAL STYLES*/
+@import url('./fonts/chillax.css');
+
+/* CSS VARIABLES */
+:root {
+    --bg: #F3F2FA;
+    --surface: #FFFFFF;
+    --text-main: #0F0E13;
+    --text-muted: #6B7280;
+    --accent: rgba(138, 79, 255, 0.4);
+    --accent-dark: #6D28D9;
+    --line: #E1E2EA;
+    --font-body: 'Chillax-Variable', sans-serif;
+    --font-heading: 'Chillax-Variable', sans-serif;
+    --card-color: #8A4FFF;
+}
+
+/* Dark mode */
+[data-theme='dark'] {
+    --bg:#0F0E13;
+    --surface: #1A1825;
+    --text-main: #F3F2FA;
+    --text-muted: #9CA3AF;
+    --accent: #C4B5FD;
+    --accent-dark: #6D28D9;
+    --line: #2A2838;
+}
+
+
+/* Global Reset */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Chillax-Variable', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+/* Body & Typography */
+body {
+    line-height: 1.6;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-body), sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.3;
+    background-image: url("/images/noise.png");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+body, p, li, span, input, textarea
+{
+    font-family: var(--font-body), sans-serif;
+    font-weight: 400;
+}
+
+
+h1, h2, h3, h4
+{
+    font-family: var(--font-heading), sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* SHARED SECTION HEADER */
+.section-heading{
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.section-heading h2{
+    font-size: 1.8rem;
+    color: var(--text-main);
+    white-space: nowrap;
+}
+
+.section-num{
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.section-line{
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+    max-width: 320px;
+}
+
+/*SHARED WORD HIGHLIGHTS*/
+mark{
+    background: none;
+    color: inherit;
+    border-radius: 5px;
+    padding: 0 5px;
+}
+
+.highlight-lavender {
+    background: rgba(138, 79, 255, 0.14);
+    color: var(--accent-dark);
+}
+.highlight-teal{
+    background: rgba(97, 218, 251, 0.18);
+    color: #0891B2;
+}
+.highlight-peach{
+    background: rgba(251, 146, 60, 0.16);
+    color: #C2410C;
+}
+.highlight-mint{
+    background: rgba(134, 239, 172, 0.22);
+    color: #86EFAC;
+}
+[data-theme='dark'] .highlight-lavender{
+    color: #C4B5FD;
+}
+[data-theme='dark'] .highlight-teal{
+    color: #67E8F9;
+}
+[data-theme='dark'] .highlight-peach{
+    color: #FDBA74;
+}
+[data-theme='dark'] .highlight-mint{
+    color: #4ADE80;
+}
+
+/*Utility Classes*/
+.hero-title{
+    font-weight: 700
+}
+
+.section-title
+{
+    font-weight: 600;
+}
+
+.small-text
+{
+    font-weight: 300;
+}
+
+/* Shared Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-heading), sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background:  var(--text-main);
+    color:  var(--surface);
+    padding: 0.7rem 1.4rem;
+    border: none;
+    border-radius: 30px;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.btn:hover {
+    background: var(--accent-dark);
+    transform: scale(1.05);
+}
+
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--text-main);
+    color: var(--text-main);
+}
+
+.btn-outline:hover {
+    background: var(--accent);
+    border-color: transparent;
+    color: #fff;
+}
+

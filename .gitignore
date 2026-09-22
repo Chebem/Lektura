@@ -1,0 +1,25 @@
+node_modules
+dist
+dist-ssr
+
+# Secrets — never commit. See .env.example for the template.
+.env
+.env.local
+.env.*.local
+
+# IDE config: machine-specific, not part of the project.
+.idea/
+.vscode/
+
+# Real university course material used for testing. Third-party lecture
+# content (not ours to redistribute), and ~15MB of it. Keep it local.
+TestRun/
+
+.DS_Store
+*.log
+npm-debug.log*
+.vite
+
+# Scratch files from headless component tests.
+.sbtest.mjs
+.sbbuild*.mjs

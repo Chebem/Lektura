@@ -1,0 +1,136 @@
+/**
+ * Design tokens.
+ *
+ * The palette, fonts and dark-mode values come from REFERENCE/index.css — the
+ * project's existing design system. Those variable names are kept verbatim so
+ * reference CSS drops in unchanged; everything below the first block is an
+ * addition this app needs (panel surfaces, semantic states, spacing, shape,
+ * motion).
+ *
+ * Light is the base. [data-theme='dark'] redefines values only, never names.
+ */
+
+:root {
+  /* --- From REFERENCE ---------------------------------------------------- */
+  --bg: #f3f2fa;
+  --surface: #ffffff;
+  --text-main: #0f0e13;
+  --text-muted: #6b7280;
+  --accent: rgba(138, 79, 255, 0.4);
+  --accent-dark: #6d28d9;
+  --line: #e1e2ea;
+  --card-color: #8a4fff;
+
+  /* Korean glyph fallback, appended to REFERENCE's Chillax stack. Chillax has
+     no Hangul, so Korean course material must fall through to a system Korean
+     face or it renders as tofu boxes — which matters here more than in most
+     apps, since the source documents are Korean. */
+  --font-kr: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR',
+    'Nanum Gothic', sans-serif;
+
+  --font-body: 'Chillax-Variable', var(--font-kr);
+  --font-heading: 'Chillax-Variable', var(--font-kr);
+
+  /* --- Additions -------------------------------------------------------- */
+
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  /* Layered surfaces for panels, inputs and card backs */
+  --surface-2: #f8f7fc;
+  --surface-3: #eeecf6;
+  --line-strong: #c9c8d6;
+
+  /* Solid lavender for fills/borders that need opacity 1 (--accent is
+     deliberately translucent in REFERENCE, so it can't carry text) */
+  --accent-solid: #8a4fff;
+  --accent-soft: rgba(138, 79, 255, 0.12);
+  --accent-ring: rgba(138, 79, 255, 0.3);
+  --text-faint: #9ca3af;
+  --text-on-accent: #ffffff;
+
+  /* Semantic — hue-shifted to sit beside the lavender rather than fight it */
+  --success: #0e8a5f;
+  --success-soft: rgba(52, 211, 153, 0.16);
+  --danger: #c2185b;
+  --danger-soft: rgba(244, 114, 182, 0.16);
+  --warning: #b45309;
+  --warning-soft: rgba(251, 146, 60, 0.16);
+
+  /* Highlight marks from REFERENCE, exposed as tokens */
+  --highlight-lavender-bg: rgba(138, 79, 255, 0.14);
+  --highlight-teal-bg: rgba(97, 218, 251, 0.18);
+  --highlight-peach-bg: rgba(251, 146, 60, 0.16);
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.6rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+  --radius-pill: 30px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 14, 19, 0.05);
+  --shadow: 0 4px 16px rgba(15, 14, 19, 0.07);
+  --shadow-lg: 0 18px 44px rgba(15, 14, 19, 0.12);
+  --shadow-accent: 0 12px 30px rgba(138, 79, 255, 0.24);
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 150ms;
+  --dur: 300ms;
+  --dur-slow: 520ms;
+}
+
+[data-theme='dark'] {
+  /* --- From REFERENCE --------------------------------------------------- */
+  --bg: #0f0e13;
+  --surface: #1a1825;
+  --text-main: #f3f2fa;
+  --text-muted: #9ca3af;
+  --accent: #c4b5fd;
+  --accent-dark: #6d28d9;
+  --line: #2a2838;
+
+  /* --- Additions -------------------------------------------------------- */
+  --surface-2: #221f30;
+  --surface-3: #2d2a3d;
+  --line-strong: #3a3848;
+
+  --accent-solid: #a97cff;
+  --accent-soft: rgba(169, 124, 255, 0.16);
+  --accent-ring: rgba(196, 181, 253, 0.34);
+  --text-faint: #6c768a;
+
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --danger: #f472b6;
+  --danger-soft: rgba(244, 114, 182, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 146, 60, 0.14);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.6);
+  --shadow-accent: 0 12px 30px rgba(109, 40, 217, 0.45);
+}
+
+/* Aliases so component CSS can read a neutral name while REFERENCE keeps
+   ownership of the value. */
+:root,
+[data-theme='dark'] {
+  --text: var(--text-main);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+}

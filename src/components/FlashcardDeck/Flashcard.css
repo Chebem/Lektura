@@ -1,0 +1,139 @@
+.flip {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  height: clamp(300px, 44vh, 420px);
+  perspective: 1600px;
+}
+
+.flip--interactive {
+  cursor: pointer;
+}
+
+.flip__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-slow) var(--ease);
+}
+
+.flip--flipped .flip__inner {
+  transform: rotateY(180deg);
+}
+
+/* Reduced motion: crossfade instead of rotating, and no transition at all on
+   the transform. The end state is identical. */
+.flip--no-motion .flip__inner {
+  transition: none;
+  transform: none;
+}
+
+.flip--no-motion .flip__face {
+  backface-visibility: visible;
+  transition: opacity var(--dur-fast) linear;
+}
+
+.flip--no-motion .flip__face--back {
+  transform: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flip--no-motion.flip--flipped .flip__face--front {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flip--no-motion.flip--flipped .flip__face--back {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.flip__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.flip__face--front {
+  border-top: 3px solid var(--accent-solid);
+}
+
+.flip__face--back {
+  transform: rotateY(180deg);
+  background: var(--surface-2);
+  border-top: 3px solid var(--accent-dark);
+}
+
+.flip__tag {
+  flex: none;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.flip__content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.flip__hint {
+  flex: none;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  text-align: right;
+}
+
+/* Correct / incorrect tones, used by the quiz. */
+.flip--correct .flip__face--back {
+  border-top-color: var(--success);
+  background: var(--success-soft);
+}
+
+.flip--incorrect .flip__face--back {
+  border-top-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.flip--bounce .flip__inner {
+  animation: flip-bounce 420ms var(--ease);
+}
+
+@keyframes flip-bounce {
+  0% {
+    transform: rotateY(180deg) scale(1);
+  }
+  45% {
+    transform: rotateY(180deg) scale(1.04);
+  }
+  100% {
+    transform: rotateY(180deg) scale(1);
+  }
+}
+
+@media (max-width: 720px) {
+  .flip {
+    height: clamp(320px, 56vh, 460px);
+  }
+
+  .flip__face {
+    padding: var(--space-4);
+  }
+}

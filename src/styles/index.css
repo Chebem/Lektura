@@ -1,0 +1,425 @@
+/* GLOBAL STYLES — base layer carried over from REFERENCE/index.css */
+
+@import './fonts.css';
+@import './tokens.css';
+@import './layout.css';
+
+/* Global Reset */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Body & Typography */
+body {
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background var(--dur) ease, color var(--dur) ease;
+}
+
+/* Grain overlay from REFERENCE. The original pointed at /images/noise.png;
+   generated inline with SVG turbulence instead so there's no binary asset to
+   ship or keep in sync. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  mix-blend-mode: multiply;
+}
+
+[data-theme='dark'] body::before {
+  mix-blend-mode: screen;
+  opacity: 0.16;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+body,
+p,
+li,
+span,
+input,
+textarea,
+select,
+button {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+p {
+  margin-bottom: var(--space-3);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--accent-dark);
+}
+
+[data-theme='dark'] a {
+  color: var(--accent);
+}
+
+img {
+  max-width: 100%;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-solid);
+  outline-offset: 2px;
+}
+
+/* SHARED SECTION HEADER (REFERENCE) */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  width: 100%;
+}
+
+.section-heading h2 {
+  font-size: var(--text-xl);
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.section-num {
+  color: var(--accent-dark);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+[data-theme='dark'] .section-num {
+  color: var(--accent);
+}
+
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  max-width: 320px;
+}
+
+/* SHARED WORD HIGHLIGHTS (REFERENCE) */
+mark {
+  background: none;
+  color: inherit;
+  border-radius: 5px;
+  padding: 0 5px;
+}
+
+.highlight-lavender {
+  background: var(--highlight-lavender-bg);
+  color: var(--accent-dark);
+}
+
+.highlight-teal {
+  background: var(--highlight-teal-bg);
+  color: #0891b2;
+}
+
+.highlight-peach {
+  background: var(--highlight-peach-bg);
+  color: #c2410c;
+}
+
+[data-theme='dark'] .highlight-lavender {
+  color: #c4b5fd;
+}
+
+[data-theme='dark'] .highlight-teal {
+  color: #67e8f9;
+}
+
+[data-theme='dark'] .highlight-peach {
+  color: #fdba74;
+}
+
+/* Utility Classes (REFERENCE) */
+.hero-title {
+  font-weight: 700;
+}
+
+.section-title {
+  font-weight: 600;
+}
+
+.small-text {
+  font-weight: 300;
+}
+
+/* Shared Buttons (REFERENCE) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+  background: var(--text-main);
+  color: var(--surface);
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur) ease, transform var(--dur) ease,
+    box-shadow var(--dur) ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent-dark);
+  transform: scale(1.05);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--text-main);
+  color: var(--text-main);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 0.45rem 0.95rem;
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Scrollbars — keep panels from looking like raw browser chrome. */
+.sb-scroll {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.sb-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.sb-scroll::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid var(--surface);
+  border-radius: 999px;
+}
+
+.sb-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Shared small pieces */
+.sb-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: var(--space-2);
+}
+
+.sb-select {
+  width: 100%;
+  appearance: none;
+  background-color: var(--surface);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 17px) center, calc(100% - 12px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-main);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: 9px 34px 9px 15px;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.sb-select:hover {
+  border-color: var(--accent-solid);
+}
+
+.sb-select:focus-visible {
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  outline: none;
+}
+
+.sb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  min-height: 180px;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.sb-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 20px;
+  line-height: 1;
+}
+
+[data-theme='dark'] .sb-empty__icon {
+  color: var(--accent);
+}
+
+.sb-empty__title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.sb-empty__hint {
+  font-size: var(--text-sm);
+  max-width: 36ch;
+}
+
+.sb-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+  margin: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.sb-error__title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+/* Indeterminate loading bar, reused by every AI-driven panel. */
+.sb-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  height: 100%;
+  min-height: 180px;
+  padding: var(--space-6);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.sb-loading__bar {
+  position: relative;
+  width: min(220px, 70%);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.sb-loading__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  border-radius: 999px;
+  background: var(--accent-solid);
+  animation: sb-slide 1.15s var(--ease) infinite;
+}
+
+@keyframes sb-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(340%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-loading__bar::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}

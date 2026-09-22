@@ -1,0 +1,76 @@
+.pdf {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.pdf__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.pdf__spacer {
+  flex: 1;
+}
+
+.pdf__pager {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.pdf__page-input {
+  width: 48px;
+  padding: 5px 8px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.pdf__page-input:focus-visible {
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  outline: none;
+}
+
+.pdf__page-total {
+  white-space: nowrap;
+}
+
+.pdf__stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--space-4);
+  background: var(--surface-3);
+}
+
+/* White page on a grey mat — the conventional document-viewer look, and it
+   keeps the original layout legible in dark mode too. */
+.pdf__canvas {
+  display: block;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: var(--shadow);
+  max-width: 100%;
+}
+
+@media (max-width: 720px) {
+  .pdf__stage {
+    padding: var(--space-2);
+  }
+}
