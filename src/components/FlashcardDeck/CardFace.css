@@ -1,0 +1,129 @@
+.cardface__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cardface__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+
+/* One hue per category so the deck is scannable at a glance. */
+.cardface__badge--vocab {
+  background: rgba(251, 191, 36, 0.16);
+  color: #92400e;
+}
+.cardface__badge--terminology {
+  background: rgba(59, 130, 246, 0.14);
+  color: #1d4ed8;
+}
+.cardface__badge--sentence-pattern {
+  background: rgba(168, 85, 247, 0.14);
+  color: #7e22ce;
+}
+.cardface__badge--grammar {
+  background: rgba(244, 114, 182, 0.14);
+  color: #be185d;
+}
+.cardface__badge--concept {
+  background: rgba(52, 211, 153, 0.16);
+  color: #047857;
+}
+.cardface__badge--exam {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+[data-theme='dark'] .cardface__badge--vocab { color: #fbbf24; }
+[data-theme='dark'] .cardface__badge--terminology { color: #93c5fd; }
+[data-theme='dark'] .cardface__badge--sentence-pattern { color: #d8b4fe; }
+[data-theme='dark'] .cardface__badge--grammar { color: #f9a8d4; }
+[data-theme='dark'] .cardface__badge--concept { color: #6ee7b7; }
+
+.cardface__term-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: center;
+  text-align: center;
+  margin: auto 0;
+}
+
+.cardface__term {
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 3.4vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.cardface__romanization {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.cardface__translation {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--accent-dark);
+  margin-bottom: var(--space-1);
+}
+
+[data-theme='dark'] .cardface__translation {
+  color: var(--accent);
+}
+
+.cardface__meaning {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-main);
+  margin-bottom: var(--space-2);
+}
+
+.cardface__meaning-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cardface__example {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.cardface__example p {
+  margin: 0;
+}
+
+.cardface__example-en {
+  margin-top: var(--space-1) !important;
+  color: var(--text-muted);
+}
+
+.cardface__source {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  margin: 0;
+}

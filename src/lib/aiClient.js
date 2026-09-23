@@ -250,6 +250,14 @@ export async function askChatbot(source, profile, chatHistory, userMessage) {
 
 // --- 3. Flashcards ---------------------------------------------------------
 
+const VALID_CATEGORIES = new Set([
+  'Vocab',
+  'Terminology',
+  'Sentence Pattern',
+  'Grammar',
+  'Concept',
+]);
+
 export async function getFlashcards(source, profile) {
   const result = await postJson('/api/ai', {
     task: 'flashcards',
@@ -259,22 +267,53 @@ export async function getFlashcards(source, profile) {
   });
 
   const parsed = parseJson(result.text, 'the flashcards');
-  const cards = (Array.isArray(parsed.flashcards) ? parsed.flashcards : [])
-    .filter((card) => card && card.front && card.back)
-    .map((card, index) => ({
-      id: `card-${index}`,
-      front: String(card.front),
-      back: String(card.back),
-      source: card.source ? String(card.source) : null,
-    }));
+
+  // Accept the older `flashcards` key too, so a cached or older response
+  // still renders instead of showing an empty deck.
+  const raw = Array.isArray(parsed.cards)
+    ? parsed.cards
+    : Array.isArray(parsed.flashcards)
+      ? parsed.flashcards
+      : [];
+
+  const cards = raw
+    .map((card, index) => normalizeCard(card, index))
+    .filter(Boolean);
 
   if (cards.length === 0) {
-    throw new AiError('No flashcards could be generated from this document.', {
-      hint: 'Very short or image-only PDFs often have too little text to work with.',
+    throw new AiError('No learning cards could be generated from this document.', {
+      hint: 'Very short or image-only documents often have too little text to work with.',
     });
   }
 
   return { cards, warning: truncationHint(result.truncated) };
+}
+
+/** Model output is untrusted: coerce every field and drop unusable cards. */
+function normalizeCard(card, index) {
+  if (!card) return null;
+
+  // `front`/`back` is the older shape; map it onto the new one.
+  const term = card.term ?? card.front;
+  const translation = card.translation ?? card.back;
+  if (!term) return null;
+
+  const text = (value) =>
+    value == null || value === '' ? null : String(value);
+
+  return {
+    id: `card-${index}`,
+    term: String(term),
+    romanization: text(card.romanization),
+    translation: text(translation) ?? '',
+    category: VALID_CATEGORIES.has(card.category) ? card.category : 'Vocab',
+    examPriority: card.examPriority === true,
+    generalMeaning: text(card.generalMeaning),
+    courseMeaning: text(card.courseMeaning),
+    exampleKo: text(card.exampleKo),
+    exampleEn: text(card.exampleEn),
+    source: text(card.source),
+  };
 }
 
 // --- 4. Quiz ---------------------------------------------------------------

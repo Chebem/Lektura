@@ -191,37 +191,56 @@ ${materialBlock(courseMaterial)}`;
 
 // --- 4.3 Flashcards --------------------------------------------------------
 
-export function flashcardsPrompt(profile, courseMaterial) {
-  return `Generate flashcards from the course material. Each card should cover one piece
-of difficult academic vocabulary, subject-specific terminology, a frequently
-used sentence pattern, or a difficult grammar structure that actually appears
-in the material — do not invent terms not present in the text.
+export const CARD_CATEGORIES = [
+  'Vocab',
+  'Terminology',
+  'Sentence Pattern',
+  'Grammar',
+  'Concept',
+];
 
-For each card, where possible include: the term, an English translation, a
-simple general meaning, the meaning as used specifically in this material, and
-an example sentence drawn from or modeled closely on the course context.
+export function flashcardsPrompt(profile, courseMaterial) {
+  return `Generate learning cards from the course material. Every card must come from
+something that actually appears in the material — do not invent terms.
 
 ${studyProfileContext(profile)}
 
 Weight card selection by the learning goal: "Learning Korean" or "TOPIK
-preparation" → vocabulary, grammar, and sentence patterns; "Preparing for an
+preparation" → vocabulary, grammar and sentence patterns; "Preparing for an
 exam" or "University coursework" → subject-specific terminology and key
-concepts; "Memorizing important concepts" → the most repeated and most central
-terms in the material.
+concepts; "Memorizing important concepts" → the most repeated and most
+central terms.
 
-Generate between 10 and 18 cards, depending on how much distinct material
-there is. Do not pad with near-duplicates to hit a number.
+Categorise each card as exactly one of:
+- "Vocab"             general academic vocabulary
+- "Terminology"       subject-specific technical terms
+- "Sentence Pattern"  a recurring sentence structure
+- "Grammar"           a grammar point worth drilling
+- "Concept"           an idea rather than a word
+
+Mark "examPriority": true for the cards most likely to be tested. Expect
+roughly half to qualify — be selective rather than marking everything.
+
+Generate between 10 and 18 cards depending on how much distinct material
+there is. Do not pad with near-duplicates.
 
 ${GROUNDING_RULE}
 
 Return ONLY valid JSON, no preamble, no markdown fences:
 
 {
-  "flashcards": [
+  "cards": [
     {
-      "front": "string (the term or pattern, as it appears in the material)",
-      "back": "string (translation + simple meaning + course-specific meaning + example)",
-      "source": "string or null (section or page it came from)"
+      "term": "string — the Korean term or pattern exactly as it appears",
+      "romanization": "string — Revised Romanization, or null if not Korean",
+      "translation": "string — concise English equivalent",
+      "category": "Vocab|Terminology|Sentence Pattern|Grammar|Concept",
+      "examPriority": true,
+      "generalMeaning": "string — what it means in everyday use, or null",
+      "courseMeaning": "string — what it means specifically in this material",
+      "exampleKo": "string — an example sentence drawn from or modelled on the material",
+      "exampleEn": "string — English translation of that example",
+      "source": "string — section or page it came from, or null"
     }
   ]
 }
