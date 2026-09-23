@@ -5,8 +5,21 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "checkJs": false
+    "checkJs": false,
+    "paths": {
+      "@lineiconshq/free-icons": [
+        "./types/lineicons-module.d.ts"
+      ]
+    }
   },
-  "include": ["src", "server", "netlify", "types"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src",
+    "server",
+    "netlify",
+    "types"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
