@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import StudyProfile from '../StudyProfile/StudyProfile.jsx';
-import TabSwitcher from '../TabSwitcher/TabSwitcher.jsx';
 import HoverButton from '../HoverButton/HoverButton.jsx';
 import Icon from '../Icon/Icon.jsx';
 import './AppHeader.css';
@@ -25,9 +24,7 @@ export default function AppHeader({
   onFileChosen,
   theme,
   onToggleTheme,
-  tabs,
-  activeTab,
-  onTabChange,
+  children,
 }) {
   const fileInputRef = useRef(null);
 
@@ -90,7 +87,7 @@ export default function AppHeader({
         locked={profileLocked}
       />
 
-      <TabSwitcher tabs={tabs} activeId={activeTab} onChange={onTabChange} />
+      {children}
     </header>
   );
 }

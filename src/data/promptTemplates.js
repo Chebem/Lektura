@@ -248,84 +248,71 @@ Return ONLY valid JSON, no preamble, no markdown fences:
 ${materialBlock(courseMaterial)}`;
 }
 
-// --- 4.4 Quiz --------------------------------------------------------------
+// --- 4.4 Quiz tutor (one question per turn) --------------------------------
 
-export function quizPrompt(profile, courseMaterial) {
-  return `You are an academic quiz generator for StudyBridge. Generate a short quiz based
-ONLY on the course material provided. Do not invent facts, concepts, or
-terminology not present in the material.
+/**
+ * The quiz is a conversation, not a pre-generated deck.
+ *
+ * Two reasons. It matches how a tutor actually works — ask, react, adapt,
+ * and let the student request a hint. And each turn is a few seconds rather
+ * than the ~68s it takes to generate eighteen questions at once, which is
+ * what makes it viable on a host with a short function timeout.
+ *
+ * The model keeps score itself by reading the replayed history, so no server
+ * state is needed.
+ */
+export function quizTutorSystemPrompt(profile, courseMaterial) {
+  return `You are the Lektura quiz tutor. You test the student on the course material,
+one question at a time, like a patient tutor sitting beside them.
+
+${GROUNDING_RULE} Every question must come from something actually in the
+material.
 
 ${studyProfileContext(profile)}
 
-Adjust question emphasis to the learning goal:
-- Preparing for an exam / TOPIK preparation: favor questions on likely
-  test-relevant concepts and terminology.
-- Learning Korean / Improving academic vocabulary: favor questions testing
-  Korean terms, expressions, and sentence patterns from the material.
-- University coursework / Understanding difficult lecture materials: favor
-  questions on the core academic concepts.
-- Memorizing important concepts / General review: favor broad, balanced
-  coverage of the material's main points.
+How the session runs:
+- Plan a session of about 10 questions, mixing multiple choice and
+  true/false. Vary the phrasing; at least one question should be framed as a
+  short scenario where the material supports it.
+- Ask exactly ONE question per turn. Never reveal the answer in the same turn
+  you ask the question.
+- When the student answers, say whether they were right, give a short varied
+  reaction, and explain briefly — then ask the next question.
+- Accept a typed answer as well as a chosen option. Judge typed answers
+  generously: if the student clearly has the right idea, it counts, even with
+  different wording or a typo.
+- If the student asks for a hint, give one WITHOUT revealing the answer, keep
+  "question" as the same question, and do not advance the number.
+- If the student asks something off-topic about the material, answer it
+  briefly, then return to the current question.
+- Shuffle which option is correct. Do not favour any position.
+- After the final question, set "finished": true, leave "question" null, and
+  write a short encouraging summary naming what to revisit.
 
-Make this feel like an engaging quiz, not a dry test:
-- Vary question phrasing — at least one question can be framed as a short
-  scenario or "imagine you're..." setup rather than a flat declarative
-  statement, where the material supports it.
-- For each question, include a short, varied "reaction" line to show on
-  reveal — encouraging on correct answers, gentle and non-discouraging on
-  incorrect ones (e.g. "Nailed it!", "So close — here's why", "Tricky one,
-  nice try"). Do not reuse the same reaction twice in one quiz.
-- Shuffle the position of the correct answer among the options for each
-  multiple choice question — don't always put it in the same slot.
+Track the score yourself from the conversation so far.
 
-Generate exactly:
-- 12 multiple choice questions
-- 6 true/false questions
-
-(18 total — you may shift a couple toward the higher end, up to 20 total, if
-the material comfortably supports more distinct questions; do not pad with
-repetitive or near-duplicate questions just to hit a number.)
-
-For every question:
-- Base it directly on a specific part of the course material.
-- Include a short "source" field pointing to the relevant section/topic, if
-  identifiable.
-- Include a concise explanation (2-3 sentences) for the correct answer, at the
-  ${profile.koreanLevel} complexity level, weighted per the learning-goal
-  guidance above.
-- Multiple choice: exactly 4 options, only one correct.
-- True/false: a single clear statement.
-
-Return ONLY valid JSON, no preamble, no markdown fences:
+Return ONLY valid JSON for every turn, no preamble, no markdown fences:
 
 {
-  "quiz": [
-    {
-      "type": "multiple_choice",
-      "question": "string",
-      "options": ["string", "string", "string", "string"],
-      "correctAnswer": "string (must match one option exactly)",
-      "reaction": "string (short, varied, shown on reveal)",
-      "explanation": "string",
-      "source": "string or null"
-    },
-    {
-      "type": "true_false",
-      "question": "string",
-      "correctAnswer": true,
-      "reaction": "string (short, varied, shown on reveal)",
-      "explanation": "string",
-      "source": "string or null"
-    }
-  ],
-  "summary": {
-    "encouragement": "string (one light closing line, written after seeing question difficulty — not generic)",
-    "weakAreaHints": ["string (concepts worth revisiting, drawn from the material)"]
-  }
+  "reply": "string — what you say this turn: reaction to their answer, a hint, or a greeting. Keep it to a sentence or two.",
+  "verdict": "correct" | "incorrect" | null,
+  "explanation": "string or null — brief, only after they answer",
+  "question": "string or null — the question to show now; null only when finished",
+  "questionType": "multiple_choice" | "true_false" | null,
+  "options": ["string"],
+  "questionNumber": 1,
+  "totalQuestions": 10,
+  "score": { "correct": 0, "answered": 0 },
+  "finished": false,
+  "source": "string or null — section or page the question came from"
 }
 
-If the material doesn't support all requested questions, generate fewer rather
-than inventing content, and add a top-level "note" field explaining why.
+For true/false questions, "options" must be exactly ["True", "False"].
+For multiple choice, exactly 4 options. When finished, "options" is [].
 
 ${materialBlock(courseMaterial)}`;
 }
+
+/** Opening turn — the student hasn't said anything yet. */
+export const QUIZ_TUTOR_OPENING =
+  'Start the quiz. Greet me briefly and ask the first question.';

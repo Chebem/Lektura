@@ -22,17 +22,18 @@
   padding: var(--space-5);
 }
 
-/* Tab 1 — three panels side by side on desktop, stacked on narrow screens. */
+/* Panes side by side on desktop, stacked on narrow screens. The column
+   count comes from how many panes are open, not from which tab is active. */
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: var(--space-4);
   height: 100%;
   min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.workspace--with-chat {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.85fr);
+.workspace--dual[data-panes='2'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .panel {
@@ -114,8 +115,7 @@
 }
 
 @media (max-width: 1080px) {
-  .workspace,
-  .workspace--with-chat {
+  .workspace--dual[data-panes='2'] {
     grid-template-columns: minmax(0, 1fr);
     height: auto;
   }
@@ -137,4 +137,10 @@
   .panel {
     min-height: 70vh;
   }
+}
+
+/* A pane whose content scrolls as a whole (the card deck) rather than
+   managing its own internal scroll regions. */
+.panel__body--scroll {
+  overflow-y: auto;
 }

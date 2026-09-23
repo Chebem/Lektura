@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import AppHeader from './components/AppHeader/AppHeader.jsx';
 import PdfViewer from './components/PdfViewer/PdfViewer.jsx';
 import TranslationPanel from './components/TranslationPanel/TranslationPanel.jsx';
-import ChatbotPanel from './components/ChatbotPanel/ChatbotPanel.jsx';
 import FlashcardDeck from './components/FlashcardDeck/FlashcardDeck.jsx';
-import QuizDeck from './components/QuizDeck/QuizDeck.jsx';
+import TutorPanel from './components/TutorPanel/TutorPanel.jsx';
+import PaneBar, { PANES } from './components/PaneBar/PaneBar.jsx';
 import HoverButton from './components/HoverButton/HoverButton.jsx';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx';
 import {
@@ -13,15 +13,10 @@ import {
   getTranslation,
   askChatbot,
   getFlashcards,
-  getQuiz,
+  askQuizTutor,
 } from './lib/aiClient.js';
+import { QUIZ_TUTOR_OPENING } from './data/promptTemplates.js';
 import './App.css';
-
-const TABS = [
-  { id: 'document', label: 'Document & Translation' },
-  { id: 'flashcards', label: 'Flashcards' },
-  { id: 'quiz', label: 'Quiz' },
-];
 
 /** One holder for each AI-backed result: data plus its own status/error. */
 const emptyResource = { data: null, status: 'idle', error: null };
@@ -50,13 +45,18 @@ export default function App() {
 
   const [translation, setTranslation] = useState(emptyResource);
   const [flashcards, setFlashcards] = useState(emptyResource);
-  const [quiz, setQuiz] = useState(emptyResource);
 
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatBusy, setChatBusy] = useState(false);
+  // The tutor is one surface with two directions. Each keeps its own
+  // transcript so switching modes doesn't splice unrelated conversations
+  // together in the model's history.
+  const [tutorMode, setTutorMode] = useState('ask');
+  const [askMessages, setAskMessages] = useState([]);
+  const [quizMessages, setQuizMessages] = useState([]);
+  const [quizTurn, setQuizTurn] = useState(null);
+  const [tutorBusy, setTutorBusy] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('document');
-  const [showChat, setShowChat] = useState(true);
+  const [layout, setLayout] = useState('dual');
+  const [panes, setPanes] = useState(['document', 'translation']);
   const [theme, setTheme] = useState(null);
   const [provider, setProvider] = useState(null);
 
@@ -102,9 +102,9 @@ export default function App() {
       setDocMeta({ name: uploaded.name, bytes: uploaded.size });
       setTranslation(emptyResource);
       setFlashcards(emptyResource);
-      setQuiz(emptyResource);
-      setChatMessages([]);
-      setActiveTab('document');
+      setAskMessages([]);
+      setQuizMessages([]);
+      setQuizTurn(null);
     } catch (error) {
       setUploadError(error);
     } finally {
@@ -139,47 +139,87 @@ export default function App() {
     [run, source, profile],
   );
 
-  const generateQuiz = useCallback(
-    () => run(setQuiz, () => getQuiz(source, profile)),
-    [run, source, profile],
-  );
+  // --- Tutor ---------------------------------------------------------------
+  const isQuiz = tutorMode === 'quiz';
+  const tutorMessages = isQuiz ? quizMessages : askMessages;
 
-  // --- Chat ----------------------------------------------------------------
-  async function handleSend(text) {
-    const userMessage = {
-      id: `m-${Date.now()}`,
-      role: 'user',
-      content: text,
-    };
+  async function sendTutorMessage(text, { silent = false } = {}) {
+    const setMessages = isQuiz ? setQuizMessages : setAskMessages;
+    const history = tutorMessages.filter((message) => !message.isError);
 
-    // Snapshot the history *before* this turn — the model shouldn't receive
-    // the question twice.
-    const history = chatMessages.filter((message) => !message.isError);
-
-    setChatMessages((current) => [...current, userMessage]);
-    setChatBusy(true);
+    if (!silent) {
+      setMessages((current) => [
+        ...current,
+        { id: `m-${Date.now()}`, role: 'user', content: text },
+      ]);
+    }
+    setTutorBusy(true);
 
     try {
-      const answer = await askChatbot(source, profile, history, text);
-      setChatMessages((current) => [
-        ...current,
-        { id: `m-${Date.now()}-a`, role: 'assistant', content: answer },
-      ]);
+      if (isQuiz) {
+        const turn = await askQuizTutor(source, profile, history, text);
+        setQuizTurn(turn);
+
+        // The transcript shows what the tutor says; the structured fields
+        // drive the option buttons and progress below it.
+        const parts = [turn.reply, turn.explanation, turn.question].filter(
+          Boolean,
+        );
+        setMessages((current) => [
+          ...current,
+          {
+            id: `m-${Date.now()}-a`,
+            role: 'assistant',
+            content: parts.join('\n\n'),
+          },
+        ]);
+      } else {
+        const answer = await askChatbot(source, profile, history, text);
+        setMessages((current) => [
+          ...current,
+          { id: `m-${Date.now()}-a`, role: 'assistant', content: answer },
+        ]);
+      }
     } catch (error) {
-      setChatMessages((current) => [
+      setMessages((current) => [
         ...current,
         {
           id: `m-${Date.now()}-e`,
           role: 'assistant',
-          content: error.hint
-            ? `${error.message} ${error.hint}`
-            : error.message,
+          content: error.hint ? `${error.message} ${error.hint}` : error.message,
           isError: true,
         },
       ]);
     } finally {
-      setChatBusy(false);
+      setTutorBusy(false);
     }
+  }
+
+  function startQuiz() {
+    setQuizMessages([]);
+    setQuizTurn(null);
+    setTutorMode('quiz');
+    // The opening turn has no student message to show.
+    sendTutorMessage(QUIZ_TUTOR_OPENING, { silent: true });
+  }
+
+  // --- Panes ----------------------------------------------------------------
+  function selectPane(id) {
+    setPanes((current) => {
+      if (layout === 'single') return [id];
+      if (current.includes(id)) {
+        // Never leave dual mode with nothing on screen.
+        return current.length > 1 ? current.filter((p) => p !== id) : current;
+      }
+      return current.length < 2 ? [...current, id] : [current[1], id];
+    });
+  }
+
+  function changeLayout(next) {
+    setLayout(next);
+    setPanes((current) =>
+      next === 'single' ? [current[0]] : current.length === 2 ? current : [current[0], 'tutor'],
+    );
   }
 
   const onDocumentLoad = useCallback(({ pageCount }) => {
@@ -187,13 +227,105 @@ export default function App() {
   }, []);
 
   // --- Render --------------------------------------------------------------
-  const tabsWithBadges = TABS.map((tab) => {
-    if (tab.id === 'flashcards' && flashcards.data)
-      return { ...tab, badge: flashcards.data.cards.length };
-    if (tab.id === 'quiz' && quiz.data)
-      return { ...tab, badge: quiz.data.questions.length };
-    return tab;
-  });
+  // --- Render ---------------------------------------------------------------
+
+  /** One pane, rendered by id. Shared by both layouts. */
+  function renderPane(id) {
+    const meta = PANES.find((pane) => pane.id === id);
+
+    if (id === 'document') {
+      return (
+        <section className="panel" key={id}>
+          <div className="panel__head">
+            <h2 className="panel__title">Original document</h2>
+            {docMeta?.pageCount ? (
+              <span className="panel__meta">{docMeta.pageCount} pages</span>
+            ) : null}
+          </div>
+          <div className="panel__body">
+            <PdfViewer file={file} onDocumentLoad={onDocumentLoad} />
+          </div>
+        </section>
+      );
+    }
+
+    if (id === 'translation') {
+      return (
+        <section className="panel" key={id}>
+          <div className="panel__head">
+            <h2 className="panel__title">English translation</h2>
+            <HoverButton
+              variant="ghost"
+              size="sm"
+              disabled={!ready}
+              busy={translation.status === 'loading'}
+              onClick={generateTranslation}
+            >
+              {translation.data ? 'Regenerate' : 'Translate'}
+            </HoverButton>
+          </div>
+          <div className="panel__body">
+            <TranslationPanel
+              translation={translation.data}
+              status={translation.status}
+              error={translation.error}
+              onRetry={generateTranslation}
+            />
+          </div>
+        </section>
+      );
+    }
+
+    if (id === 'cards') {
+      return (
+        <section className="panel" key={id}>
+          <div className="panel__head">
+            <h2 className="panel__title">Learning cards</h2>
+            {flashcards.data ? (
+              <span className="panel__meta">
+                {flashcards.data.cards.length} cards
+              </span>
+            ) : null}
+          </div>
+          <div className="panel__body panel__body--scroll sb-scroll">
+            <FlashcardDeck
+              cards={flashcards.data?.cards ?? NO_CARDS}
+              status={flashcards.status}
+              error={flashcards.error}
+              onGenerate={generateFlashcards}
+              onRetry={generateFlashcards}
+              ready={ready}
+            />
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="panel" key={id}>
+        <div className="panel__head">
+          <h2 className="panel__title">{meta?.label ?? 'Tutor'}</h2>
+        </div>
+        <div className="panel__body">
+          <TutorPanel
+            mode={tutorMode}
+            onModeChange={setTutorMode}
+            messages={tutorMessages}
+            turn={quizTurn}
+            onSend={(text) => sendTutorMessage(text)}
+            onStartQuiz={startQuiz}
+            busy={tutorBusy}
+            disabled={!ready}
+            disabledReason={
+              profileComplete
+                ? 'Upload a document to start'
+                : 'Set your study profile first'
+            }
+          />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="app">
@@ -203,21 +335,25 @@ export default function App() {
         profile={profile}
         onProfileChange={setProfile}
         profileComplete={profileComplete}
-        profileLocked={Boolean(translation.data || flashcards.data || quiz.data)}
+        profileLocked={Boolean(translation.data || flashcards.data)}
         hasDocument={Boolean(file)}
         uploading={uploading}
         onFileChosen={handleFileChosen}
         theme={theme}
         onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        tabs={tabsWithBadges}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      >
+        <PaneBar
+          layout={layout}
+          onLayoutChange={changeLayout}
+          active={panes}
+          onSelect={selectPane}
+        />
+      </AppHeader>
 
       {provider && !provider.configured ? (
         <div className="app__banner" role="status">
-          <strong>No API key configured.</strong> The PDF viewer works, but
-          translation, chat, flashcards and the quiz need a key.{' '}
+          <strong>No API key configured.</strong> The document viewer works,
+          but translation, the tutor and learning cards need a key.{' '}
           {provider.hint}
         </div>
       ) : null}
@@ -231,127 +367,13 @@ export default function App() {
       ) : null}
 
       <main className="app__body">
-        <ErrorBoundary resetKey={activeTab}>
-        {activeTab === 'document' ? (
+        <ErrorBoundary resetKey={panes.join('+')}>
           <div
-            className={`workspace${showChat ? ' workspace--with-chat' : ''}`}
-            id="panel-document"
-            role="tabpanel"
-            aria-labelledby="tab-document"
+            className={`workspace workspace--${layout}`}
+            data-panes={panes.length}
           >
-            <section className="panel">
-              <div className="panel__head">
-                <h2 className="panel__title">Original document</h2>
-                {docMeta?.pageCount ? (
-                  <span className="panel__meta">
-                    {docMeta.pageCount} pages
-                  </span>
-                ) : null}
-              </div>
-              <div className="panel__body">
-                <PdfViewer file={file} onDocumentLoad={onDocumentLoad} />
-              </div>
-            </section>
-
-            <section className="panel">
-              <div className="panel__head">
-                <h2 className="panel__title">English translation</h2>
-                <HoverButton
-                  variant="ghost"
-                  size="sm"
-                  disabled={!ready}
-                  busy={translation.status === 'loading'}
-                  onClick={generateTranslation}
-                >
-                  {translation.data ? 'Regenerate' : 'Translate'}
-                </HoverButton>
-              </div>
-              <div className="panel__body">
-                <TranslationPanel
-                  translation={translation.data}
-                  status={translation.status}
-                  error={translation.error}
-                  onRetry={generateTranslation}
-                />
-              </div>
-            </section>
-
-            {showChat ? (
-              <section className="panel">
-                <div className="panel__head">
-                  <h2 className="panel__title">AI study chatbot</h2>
-                  <HoverButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowChat(false)}
-                    title="Hide the chatbot"
-                  >
-                    Hide
-                  </HoverButton>
-                </div>
-                <div className="panel__body">
-                  <ChatbotPanel
-                    messages={chatMessages}
-                    onSend={handleSend}
-                    busy={chatBusy}
-                    disabled={!ready}
-                    disabledReason={
-                      profileComplete
-                        ? 'Upload a PDF to start asking questions'
-                        : 'Set your study profile first'
-                    }
-                  />
-                </div>
-              </section>
-            ) : null}
+            {panes.map(renderPane)}
           </div>
-        ) : null}
-
-        {!showChat && activeTab === 'document' ? (
-          <HoverButton
-            className="app__chat-fab"
-            variant="accent"
-            onClick={() => setShowChat(true)}
-          >
-            Show chatbot
-          </HoverButton>
-        ) : null}
-
-        {activeTab === 'flashcards' ? (
-          <div
-            className="stage"
-            id="panel-flashcards"
-            role="tabpanel"
-            aria-labelledby="tab-flashcards"
-          >
-            <FlashcardDeck
-              cards={flashcards.data?.cards ?? NO_CARDS}
-              status={flashcards.status}
-              error={flashcards.error}
-              onGenerate={generateFlashcards}
-              onRetry={generateFlashcards}
-              ready={ready}
-            />
-          </div>
-        ) : null}
-
-        {activeTab === 'quiz' ? (
-          <div
-            className="stage"
-            id="panel-quiz"
-            role="tabpanel"
-            aria-labelledby="tab-quiz"
-          >
-            <QuizDeck
-              quiz={quiz.data}
-              status={quiz.status}
-              error={quiz.error}
-              onGenerate={generateQuiz}
-              onRetry={generateQuiz}
-              ready={ready}
-            />
-          </div>
-        ) : null}
         </ErrorBoundary>
       </main>
     </div>

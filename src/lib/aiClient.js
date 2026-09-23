@@ -14,7 +14,7 @@ import {
   translationPrompt,
   chatbotSystemPrompt,
   flashcardsPrompt,
-  quizPrompt,
+  quizTutorSystemPrompt,
 } from '../data/promptTemplates.js';
 
 export class AiError extends Error {
@@ -316,79 +316,70 @@ function normalizeCard(card, index) {
   };
 }
 
-// --- 4. Quiz ---------------------------------------------------------------
-
-export async function getQuiz(source, profile) {
-  const result = await postJson('/api/ai', {
-    task: 'quiz',
-    ...sourceFields(source),
-    json: true,
-    prompt: quizPrompt(profile),
-  });
-
-  const parsed = parseJson(result.text, 'the quiz');
-  const rawQuestions = Array.isArray(parsed.quiz) ? parsed.quiz : [];
-
-  const questions = rawQuestions
-    .map((question, index) => normalizeQuestion(question, index))
-    .filter(Boolean);
-
-  if (questions.length === 0) {
-    throw new AiError('No quiz questions could be generated from this document.', {
-      hint: 'Very short or image-only PDFs often have too little text to work with.',
-    });
-  }
-
-  return {
-    questions,
-    summary: {
-      encouragement: parsed.summary?.encouragement ?? null,
-      weakAreaHints: Array.isArray(parsed.summary?.weakAreaHints)
-        ? parsed.summary.weakAreaHints.map(String)
-        : [],
-    },
-    note: parsed.note ? String(parsed.note) : null,
-    warning: truncationHint(result.truncated),
-  };
-}
+// --- 4. Quiz tutor (one turn at a time) ------------------------------------
 
 /**
- * Drops any question the UI couldn't render honestly — a multiple choice whose
- * correct answer isn't among its options would show the student a question
- * with no right answer, which is worse than showing one fewer question.
+ * One turn of the quiz conversation.
+ *
+ * `history` is the running transcript; the model reads it to keep score and
+ * to know which question it's on, so nothing is stored server-side.
  */
-function normalizeQuestion(question, index) {
-  if (!question || typeof question.question !== 'string') return null;
+export async function askQuizTutor(source, profile, history, userMessage) {
+  const result = await postJson('/api/ai', {
+    task: 'chat',
+    ...sourceFields(source),
+    json: true,
+    system: quizTutorSystemPrompt(profile),
+    prompt: userMessage,
+    history: history
+      .filter((turn) => turn.role === 'user' || turn.role === 'assistant')
+      .map((turn) => ({ role: turn.role, content: turn.content })),
+  });
 
-  const base = {
-    id: `q-${index}`,
-    question: question.question,
-    reaction: question.reaction ? String(question.reaction) : null,
-    explanation: question.explanation ? String(question.explanation) : '',
-    source: question.source ? String(question.source) : null,
-  };
+  const parsed = parseJson(result.text, "the tutor's reply");
+  return normalizeTurn(parsed);
+}
 
-  if (question.type === 'true_false') {
-    const answer =
-      typeof question.correctAnswer === 'boolean'
-        ? question.correctAnswer
-        : String(question.correctAnswer).toLowerCase() === 'true';
+/** Model output is untrusted; give the UI a shape it can always render. */
+function normalizeTurn(turn) {
+  const text = (value) => (value == null || value === '' ? null : String(value));
 
-    return {
-      ...base,
-      type: 'true_false',
-      options: ['True', 'False'],
-      correctAnswer: answer ? 'True' : 'False',
-    };
+  const finished = turn.finished === true;
+  let options = Array.isArray(turn.options) ? turn.options.map(String) : [];
+  const questionType =
+    turn.questionType === 'true_false' ? 'true_false' : 'multiple_choice';
+
+  if (questionType === 'true_false' && options.length !== 2) {
+    options = ['True', 'False'];
   }
 
-  const options = (Array.isArray(question.options) ? question.options : []).map(
-    String,
-  );
-  const correctAnswer =
-    question.correctAnswer == null ? '' : String(question.correctAnswer);
+  const question = finished ? null : text(turn.question);
+  if (!question) options = [];
 
-  if (options.length < 2 || !options.includes(correctAnswer)) return null;
+  const answered = Number(turn.score?.answered);
+  const correct = Number(turn.score?.correct);
 
-  return { ...base, type: 'multiple_choice', options, correctAnswer };
+  return {
+    reply: text(turn.reply) ?? '',
+    verdict:
+      turn.verdict === 'correct' || turn.verdict === 'incorrect'
+        ? turn.verdict
+        : null,
+    explanation: text(turn.explanation),
+    question,
+    questionType: question ? questionType : null,
+    options,
+    questionNumber: Number.isFinite(turn.questionNumber)
+      ? turn.questionNumber
+      : null,
+    totalQuestions: Number.isFinite(turn.totalQuestions)
+      ? turn.totalQuestions
+      : null,
+    score: {
+      correct: Number.isFinite(correct) ? correct : 0,
+      answered: Number.isFinite(answered) ? answered : 0,
+    },
+    finished,
+    source: text(turn.source),
+  };
 }
