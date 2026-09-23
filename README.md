@@ -1,4 +1,4 @@
-# StudyBridge
+# Lektura
 
 Upload the course PDFs your professors post to the university portal — lecture
 notes, slides, readings — and get an English translation, a chatbot grounded in
