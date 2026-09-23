@@ -112,7 +112,7 @@ function fileToBase64(file) {
     reader.onerror = () =>
       reject(new AiError('That file could not be read from disk.'));
     reader.onload = () => {
-      // Strip the `data:application/pdf;base64,` prefix.
+      // Strip the `data:<type>;base64,` prefix.
       const result = String(reader.result);
       const comma = result.indexOf(',');
       resolve(comma === -1 ? result : result.slice(comma + 1));
@@ -122,34 +122,102 @@ function fileToBase64(file) {
 }
 
 /**
- * Uploads the PDF once and returns a document id used by every later call.
- * Keeping the bytes server-side means chat turns stay small.
+ * Asks the server for an upload target, then sends the bytes wherever it says.
+ *
+ * For Gemini the server returns a resumable-upload URL that carries an upload
+ * token but no API key, and the browser POSTs the bytes straight to Google.
+ * The file never passes through our own server, which is what makes this work
+ * on a serverless host — Netlify caps function request bodies near 6MB, and a
+ * 5.6MB PDF exceeds that once base64-encoded.
+ *
+ * Returns a `source` descriptor to hand to every later AI call.
  */
-export async function uploadDocument(file, pageCount = null) {
-  if (file.type !== 'application/pdf') {
-    throw new AiError('StudyBridge works with PDF files.', {
-      hint: 'Export your lecture notes or slides to PDF first.',
+async function uploadBlob({ name, mimeType, blob }) {
+  const size = blob.size;
+
+  const target = await postJson('/api/documents', { name, mimeType, size });
+
+  // Providers without direct upload (the Anthropic adapter) ask for the bytes
+  // to ride along with each request instead.
+  if (target.mode === 'inline') {
+    const data = await fileToBase64(blob);
+    return { kind: 'inline', name, mimeType, size, document: { data, mimeType } };
+  }
+
+  if (!target.uploadUrl) {
+    throw new AiError('The server did not return an upload target.');
+  }
+
+  let response;
+  try {
+    response = await fetch(target.uploadUrl, {
+      method: 'POST',
+      headers: {
+        'X-Goog-Upload-Offset': '0',
+        'X-Goog-Upload-Command': 'upload, finalize',
+      },
+      body: blob,
+    });
+  } catch {
+    throw new AiError('The upload did not reach the AI service.', {
+      hint: 'Check your connection and try again.',
     });
   }
 
-  const data = await fileToBase64(file);
+  if (!response.ok) {
+    throw new AiError(`The upload failed (HTTP ${response.status}).`);
+  }
 
-  const result = await postJson('/api/documents', {
+  const payload = await response.json().catch(() => null);
+  const uri = payload?.file?.uri;
+
+  if (!uri) {
+    throw new AiError('The upload finished but no file reference came back.');
+  }
+
+  return {
+    kind: 'file',
+    name,
+    mimeType,
+    size,
+    file: { uri, mimeType: payload.file.mimeType || mimeType },
+  };
+}
+
+/** Uploads a PDF as-is — the model reads PDFs natively. */
+export async function uploadPdf(file) {
+  return uploadBlob({
     name: file.name,
-    mimeType: file.type,
-    data,
-    pageCount,
+    mimeType: 'application/pdf',
+    blob: file,
   });
+}
 
-  return result;
+/**
+ * Uploads text extracted from a Word or PowerPoint file.
+ *
+ * The model has no native Word/PowerPoint support, so those are converted to
+ * text in the browser first (see lib/extractDocument.js) and uploaded as
+ * text/plain.
+ */
+export async function uploadExtractedText(name, text) {
+  const blob = new Blob([text], { type: 'text/plain' });
+  return uploadBlob({ name, mimeType: 'text/plain', blob });
+}
+
+/** Turns a source descriptor into the request fields the server expects. */
+function sourceFields(source) {
+  if (!source) return {};
+  if (source.kind === 'file') return { file: source.file };
+  return { document: source.document };
 }
 
 // --- 1. Translation --------------------------------------------------------
 
-export async function getTranslation(documentId, profile) {
+export async function getTranslation(source, profile) {
   const result = await postJson('/api/ai', {
     task: 'translation',
-    documentId,
+    ...sourceFields(source),
     json: true,
     prompt: translationPrompt(profile),
   });
@@ -178,10 +246,10 @@ export async function getTranslation(documentId, profile) {
 
 // --- 2. Chatbot ------------------------------------------------------------
 
-export async function askChatbot(documentId, profile, chatHistory, userMessage) {
+export async function askChatbot(source, profile, chatHistory, userMessage) {
   const result = await postJson('/api/ai', {
     task: 'chat',
-    documentId,
+    ...sourceFields(source),
     json: false,
     system: chatbotSystemPrompt(profile),
     prompt: userMessage,
@@ -204,10 +272,10 @@ export async function askChatbot(documentId, profile, chatHistory, userMessage) 
 
 // --- 3. Flashcards ---------------------------------------------------------
 
-export async function getFlashcards(documentId, profile) {
+export async function getFlashcards(source, profile) {
   const result = await postJson('/api/ai', {
     task: 'flashcards',
-    documentId,
+    ...sourceFields(source),
     json: true,
     prompt: flashcardsPrompt(profile),
   });
@@ -233,10 +301,10 @@ export async function getFlashcards(documentId, profile) {
 
 // --- 4. Quiz ---------------------------------------------------------------
 
-export async function getQuiz(documentId, profile) {
+export async function getQuiz(source, profile) {
   const result = await postJson('/api/ai', {
     task: 'quiz',
-    documentId,
+    ...sourceFields(source),
     json: true,
     prompt: quizPrompt(profile),
   });

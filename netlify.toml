@@ -1,0 +1,42 @@
+# Netlify build + routing.
+#
+# GEMINI_API_KEY is NOT set here — it is configured in the Netlify site
+# dashboard (Site configuration → Environment variables). Committing it would
+# put a secret in git, which is what .env.example exists to avoid.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# The API must be matched before the SPA fallback below, or the catch-all
+# would swallow /api/* and return index.html (which is exactly how the first
+# deploy failed).
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200
+
+[[redirects]]
+  from = "/api/documents"
+  to = "/.netlify/functions/documents"
+  status = 200
+
+[[redirects]]
+  from = "/api/ai"
+  to = "/.netlify/functions/ai"
+  status = 200
+
+# Single-page app: every other path serves the shell.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# NOTE: Netlify synchronous functions are capped at 10s of wall-clock time and
+# that is not configurable up to what this app needs. Measured generation times
+# are ~7s (chat), ~30s (flashcards), ~68s (quiz) and ~268s (full translation),
+# so only chat fits. See README "Deploying" for the background-function plan.

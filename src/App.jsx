@@ -10,7 +10,7 @@ import HoverButton from './components/HoverButton/HoverButton.jsx';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx';
 import {
   checkProvider,
-  uploadDocument,
+  uploadPdf,
   getTranslation,
   askChatbot,
   getFlashcards,
@@ -42,7 +42,9 @@ export default function App() {
   });
 
   const [file, setFile] = useState(null);
-  const [documentId, setDocumentId] = useState(null);
+  // Descriptor returned by the upload: a Files API reference for Gemini, or
+  // inline bytes for providers without direct upload. Passed to every AI call.
+  const [source, setSource] = useState(null);
   const [docMeta, setDocMeta] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
@@ -62,7 +64,7 @@ export default function App() {
   const fileInputRef = useRef(null);
 
   const profileComplete = Boolean(profile.koreanLevel && profile.learningGoal);
-  const ready = Boolean(documentId && profileComplete);
+  const ready = Boolean(source && profileComplete);
 
   // --- Theme ---------------------------------------------------------------
   useEffect(() => {
@@ -95,12 +97,12 @@ export default function App() {
     setUploadError(null);
 
     try {
-      const result = await uploadDocument(chosen);
+      const uploaded = await uploadPdf(chosen);
 
       // A new document invalidates everything generated from the old one.
       setFile(chosen);
-      setDocumentId(result.documentId);
-      setDocMeta(result);
+      setSource(uploaded);
+      setDocMeta({ name: uploaded.name, bytes: uploaded.size });
       setTranslation(emptyResource);
       setFlashcards(emptyResource);
       setQuiz(emptyResource);
@@ -131,18 +133,18 @@ export default function App() {
   );
 
   const generateTranslation = useCallback(
-    () => run(setTranslation, () => getTranslation(documentId, profile)),
-    [run, documentId, profile],
+    () => run(setTranslation, () => getTranslation(source, profile)),
+    [run, source, profile],
   );
 
   const generateFlashcards = useCallback(
-    () => run(setFlashcards, () => getFlashcards(documentId, profile)),
-    [run, documentId, profile],
+    () => run(setFlashcards, () => getFlashcards(source, profile)),
+    [run, source, profile],
   );
 
   const generateQuiz = useCallback(
-    () => run(setQuiz, () => getQuiz(documentId, profile)),
-    [run, documentId, profile],
+    () => run(setQuiz, () => getQuiz(source, profile)),
+    [run, source, profile],
   );
 
   // --- Chat ----------------------------------------------------------------
@@ -161,7 +163,7 @@ export default function App() {
     setChatBusy(true);
 
     try {
-      const answer = await askChatbot(documentId, profile, history, text);
+      const answer = await askChatbot(source, profile, history, text);
       setChatMessages((current) => [
         ...current,
         { id: `m-${Date.now()}-a`, role: 'assistant', content: answer },

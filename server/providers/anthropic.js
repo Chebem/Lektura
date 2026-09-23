@@ -47,6 +47,15 @@ export function createAnthropicProvider(env) {
       'Set ANTHROPIC_API_KEY in .env and run `npm install @anthropic-ai/sdk`. ' +
       'The Anthropic API requires billing credit — see console.anthropic.com.',
 
+    /**
+     * Anthropic has its own Files API, but this adapter keeps documents inline
+     * so the fallback provider stays dependency-light. The client is told
+     * 'inline' and sends bytes with each request instead of uploading once.
+     */
+    async startUpload() {
+      return { mode: 'inline' };
+    },
+
     async generate({
       system,
       prompt,

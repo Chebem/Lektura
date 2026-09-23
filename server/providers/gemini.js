@@ -11,6 +11,7 @@
  */
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+const UPLOAD_ENDPOINT = 'https://generativelanguage.googleapis.com/upload';
 
 /**
  * Transient upstream failures to retry: rate limiting and capacity. The free
@@ -38,6 +39,58 @@ export function createGeminiProvider(env) {
       'https://aistudio.google.com/apikey — no credit card required.',
 
     /** Retries transient upstream failures with exponential backoff. */
+    /**
+     * Mints a resumable-upload URL for the browser to POST bytes to directly.
+     *
+     * The returned URL carries an upload token but NOT the API key, so it is
+     * safe to hand to the client. This matters because it keeps multi-megabyte
+     * PDFs from passing through the serverless function at all — Netlify caps
+     * function request bodies around 6MB, which a 5.6MB PDF exceeds once
+     * base64-encoded.
+     */
+    async startUpload({ name, mimeType, size }) {
+      if (!apiKey) {
+        throw Object.assign(new Error('GEMINI_API_KEY is not set.'), {
+          status: 503,
+          hint: this.setupHint,
+        });
+      }
+
+      const response = await fetch(`${UPLOAD_ENDPOINT}/v1beta/files`, {
+        method: 'POST',
+        headers: {
+          'x-goog-api-key': apiKey,
+          'X-Goog-Upload-Protocol': 'resumable',
+          'X-Goog-Upload-Command': 'start',
+          'X-Goog-Upload-Header-Content-Length': String(size),
+          'X-Goog-Upload-Header-Content-Type': mimeType,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ file: { display_name: name } }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw Object.assign(
+          new Error(
+            payload?.error?.message ||
+              `Could not start the upload (HTTP ${response.status}).`,
+          ),
+          { status: response.status },
+        );
+      }
+
+      const uploadUrl = response.headers.get('x-goog-upload-url');
+      if (!uploadUrl) {
+        throw Object.assign(
+          new Error('The upload service did not return an upload URL.'),
+          { status: 502 },
+        );
+      }
+
+      return { mode: 'resumable', uploadUrl };
+    },
+
     async generate(options) {
       let lastError = null;
 
@@ -76,9 +129,18 @@ export function createGeminiProvider(env) {
         });
       }
 
-      const documentPart = document
-        ? { inlineData: { mimeType: document.mimeType, data: document.data } }
-        : null;
+      // A document arrives either as a Files API reference (the normal path —
+      // the browser uploaded straight to Google) or as inline base64 bytes.
+      let documentPart = null;
+      if (document?.uri) {
+        documentPart = {
+          fileData: { mimeType: document.mimeType, fileUri: document.uri },
+        };
+      } else if (document?.data) {
+        documentPart = {
+          inlineData: { mimeType: document.mimeType, data: document.data },
+        };
+      }
 
       const contents = [];
 

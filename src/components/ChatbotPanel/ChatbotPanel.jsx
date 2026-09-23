@@ -60,7 +60,7 @@ export default function ChatbotPanel({
             <p className="chat__intro-title">Ask about this document</p>
             <p className="chat__intro-text">
               Answers come only from the PDF you uploaded. If something isn't
-              in it, the assistant will say so instead of guessing.
+              in it, the lektura will say so and not guess.
             </p>
             {!disabled ? (
               <div className="chat__suggestions">
@@ -99,7 +99,7 @@ export default function ChatbotPanel({
 
         {busy ? (
           <div className="chat__msg chat__msg--assistant">
-            <span className="chat__role">StudyBridge</span>
+            <span className="chat__role">Lektura</span>
             <div className="chat__bubble chat__bubble--typing">
               <span className="chat__dot" />
               <span className="chat__dot" />
