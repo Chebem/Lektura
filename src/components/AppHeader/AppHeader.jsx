@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import StudyProfile from '../StudyProfile/StudyProfile.jsx';
 import TabSwitcher from '../TabSwitcher/TabSwitcher.jsx';
 import HoverButton from '../HoverButton/HoverButton.jsx';
+import Icon from '../Icon/Icon.jsx';
 import './AppHeader.css';
 
 /**
@@ -61,6 +62,7 @@ export default function AppHeader({
           onClick={onToggleTheme}
           title="Toggle light and dark theme"
           aria-label="Toggle light and dark theme"
+          icon={<Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />}
         >
           {theme === 'dark' ? 'Light' : 'Dark'}
         </HoverButton>
@@ -76,6 +78,7 @@ export default function AppHeader({
               : 'Set your study profile first'
           }
           onClick={() => fileInputRef.current?.click()}
+          icon={<Icon name="upload" size={16} />}
         >
           {hasDocument ? 'Replace document' : 'Upload document'}
         </HoverButton>

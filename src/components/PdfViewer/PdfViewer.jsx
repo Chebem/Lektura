@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import HoverButton from '../HoverButton/HoverButton.jsx';
+import Icon from '../Icon/Icon.jsx';
 import './PdfViewer.css';
 
 // pdf.js needs its worker as a separate file; `?url` lets Vite hash and serve
@@ -183,7 +184,7 @@ export default function PdfViewer({ file, onDocumentLoad }) {
     return (
       <div className="sb-empty">
         <span className="sb-empty__icon" aria-hidden="true">
-          ⬆
+          <Icon name="upload" size={22} />
         </span>
         <span className="sb-empty__title">No document yet</span>
         <span className="sb-empty__hint">
@@ -216,7 +217,7 @@ export default function PdfViewer({ file, onDocumentLoad }) {
       <div className="pdf__toolbar">
         <HoverButton
           variant="quiet"
-          icon="‹"
+          icon={<Icon name="prev" size={16} />}
           title="Previous page"
           aria-label="Previous page"
           disabled={pageNumber <= 1}
@@ -241,7 +242,7 @@ export default function PdfViewer({ file, onDocumentLoad }) {
 
         <HoverButton
           variant="quiet"
-          icon="›"
+          icon={<Icon name="next" size={16} />}
           title="Next page"
           aria-label="Next page"
           disabled={pageNumber >= pageCount}
@@ -261,7 +262,7 @@ export default function PdfViewer({ file, onDocumentLoad }) {
 
         <HoverButton
           variant="quiet"
-          icon="−"
+          icon={<Icon name="zoomOut" size={16} />}
           title="Zoom out"
           aria-label="Zoom out"
           disabled={!fitWidth && zoomIndex === 0}
@@ -272,7 +273,7 @@ export default function PdfViewer({ file, onDocumentLoad }) {
         />
         <HoverButton
           variant="quiet"
-          icon="+"
+          icon={<Icon name="zoomIn" size={16} />}
           title="Zoom in"
           aria-label="Zoom in"
           disabled={!fitWidth && zoomIndex === ZOOM_STEPS.length - 1}

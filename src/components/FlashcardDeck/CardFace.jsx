@@ -1,11 +1,13 @@
+import Icon from '../Icon/Icon.jsx';
 import './CardFace.css';
 
-const CATEGORY_ICONS = {
-  Vocab: '📚',
-  Terminology: '🔬',
-  'Sentence Pattern': '💬',
-  Grammar: '📝',
-  Concept: '💡',
+/** Card category → the icon role registered in components/Icon. */
+export const CATEGORY_ICONS = {
+  Vocab: 'vocab',
+  Terminology: 'terminology',
+  'Sentence Pattern': 'pattern',
+  Grammar: 'grammar',
+  Concept: 'concept',
 };
 
 /** Category + exam-priority chips, shared by both faces and the grid view. */
@@ -17,12 +19,12 @@ export function CardBadges({ card }) {
           .toLowerCase()
           .replace(/\s+/g, '-')}`}
       >
-        <span aria-hidden="true">{CATEGORY_ICONS[card.category] ?? '📚'}</span>{' '}
+        <Icon name={CATEGORY_ICONS[card.category] ?? 'vocab'} size={13} />
         {card.category}
       </span>
       {card.examPriority ? (
         <span className="cardface__badge cardface__badge--exam">
-          <span aria-hidden="true">★</span> Exam Priority
+          <Icon name="exam" size={13} /> Exam Priority
         </span>
       ) : null}
     </div>

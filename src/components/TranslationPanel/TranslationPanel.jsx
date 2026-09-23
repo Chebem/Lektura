@@ -1,3 +1,4 @@
+import Icon from '../Icon/Icon.jsx';
 import './TranslationPanel.css';
 
 /**
@@ -46,7 +47,7 @@ export default function TranslationPanel({
     return (
       <div className="sb-empty">
         <span className="sb-empty__icon" aria-hidden="true">
-          ⇄
+          <Icon name="document" size={22} />
         </span>
         <span className="sb-empty__title">No translation yet</span>
         <span className="sb-empty__hint">

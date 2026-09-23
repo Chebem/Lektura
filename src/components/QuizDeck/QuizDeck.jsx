@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Flashcard from '../FlashcardDeck/Flashcard.jsx';
 import HoverButton from '../HoverButton/HoverButton.jsx';
+import Icon from '../Icon/Icon.jsx';
 import './QuizDeck.css';
 
 /**
@@ -112,7 +113,7 @@ export default function QuizDeck({
     return (
       <div className="sb-empty">
         <span className="sb-empty__icon" aria-hidden="true">
-          ◆
+          <Icon name="quiz" size={22} />
         </span>
         <span className="sb-empty__title">No quiz yet</span>
         <span className="sb-empty__hint">

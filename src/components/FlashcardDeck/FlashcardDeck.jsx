@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Flashcard from './Flashcard.jsx';
-import { CardBadges, CardFront, CardBack } from './CardFace.jsx';
+import { CardBadges, CardFront, CardBack, CATEGORY_ICONS } from './CardFace.jsx';
+import Icon from '../Icon/Icon.jsx';
 import HoverButton from '../HoverButton/HoverButton.jsx';
 import { CARD_CATEGORIES } from '../../data/promptTemplates.js';
 import './FlashcardDeck.css';
-
-const CATEGORY_ICONS = {
-  Vocab: '📚',
-  Terminology: '🔬',
-  'Sentence Pattern': '💬',
-  Grammar: '📝',
-  Concept: '💡',
-};
 
 /**
  * The learning-card deck.
@@ -144,7 +137,7 @@ export default function FlashcardDeck({
     return (
       <div className="sb-empty">
         <span className="sb-empty__icon" aria-hidden="true">
-          ⚡
+          <Icon name="cards" size={22} />
         </span>
         <span className="sb-empty__title">No learning cards yet</span>
         <span className="sb-empty__hint">
@@ -190,7 +183,7 @@ export default function FlashcardDeck({
           ))}
           {counts.exam > 0 ? (
             <FilterChip
-              icon="★"
+              icon="exam"
               label="Exam Focus"
               count={counts.exam}
               active={examOnly}
@@ -220,7 +213,7 @@ export default function FlashcardDeck({
               title="Grid view"
               aria-pressed={view === 'grid'}
             >
-              ▦
+              <Icon name="grid" size={15} />
             </button>
             <button
               type="button"
@@ -229,7 +222,7 @@ export default function FlashcardDeck({
               title="Stack view"
               aria-pressed={view === 'stack'}
             >
-              ▤
+              <Icon name="stack" size={15} />
             </button>
           </div>
         </div>
@@ -285,7 +278,7 @@ export default function FlashcardDeck({
           <div className="deck__controls">
             <HoverButton
               variant="quiet"
-              icon="‹"
+              icon={<Icon name="prev" size={16} />}
               aria-label="Previous card"
               disabled={safeIndex === 0}
               onClick={() => go(-1)}
@@ -308,7 +301,7 @@ export default function FlashcardDeck({
             </div>
             <HoverButton
               variant="quiet"
-              icon="›"
+              icon={<Icon name="next" size={16} />}
               aria-label="Next card"
               disabled={safeIndex >= visible.length - 1}
               onClick={() => go(1)}
@@ -344,7 +337,7 @@ function FilterChip({ icon, label, count, active, onClick, tone }) {
       onClick={onClick}
       aria-pressed={active}
     >
-      {icon ? <span aria-hidden="true">{icon}</span> : null}
+      {icon ? <Icon name={icon} size={13} /> : null}
       {label}
       <span className="deck__chip-count">{count}</span>
     </button>
