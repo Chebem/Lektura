@@ -31,6 +31,14 @@ far enough** — this needs an architectural choice:
       repo), then redeploy
 - [ ] Verify live: `/api/health` returns JSON, not the HTML shell
 
+### Large uploads on the deployed site
+Bytes pass through the server (browser-direct upload is impossible — the
+provider's upload response has no CORS headers). Netlify caps function
+request bodies near 6MB, so deployed uploads are limited to roughly 4MB of
+file before base64 expansion. Local dev is unaffected.
+- [ ] Forward the file to the provider in chunks using the resumable
+      protocol's byte ranges, so each request stays under the cap
+
 ### Push pending
 - [ ] Push commit `75d2663` (serverless API + direct upload). Git could not
       reach the macOS keychain from the agent shell:

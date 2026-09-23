@@ -39,25 +39,17 @@ browser  ──POST /api/ai──▶  Vite dev middleware  ──▶  Gemini API
                              attaches the key)
 ```
 
-The document is uploaded **once, straight from the browser to the AI
-provider**, and referenced by URI after that:
+The document is uploaded once to `/api/documents`, which forwards it to the
+provider's Files API and returns a reference. Every later call cites that
+reference, so chat turns carry a URI rather than megabytes.
 
-```
-browser ──POST /api/documents──▶ function mints a resumable upload URL
-                                  (holds the key; the URL contains no key)
-browser ──────bytes────────────▶ provider's upload endpoint (direct)
-browser ──POST /api/ai────────▶ function generates, citing the file URI
-```
+Browser-direct upload is not possible: the provider's upload endpoint passes
+CORS preflight but its actual response carries no `Access-Control-Allow-Origin`
+header, so the browser cannot read the result.
 
-Two reasons it works this way rather than proxying the file:
-
-- Serverless hosts cap function request bodies (Netlify ~6MB). A 5.6MB PDF
-  exceeds that once base64-encoded, so proxying it would simply fail.
-- Chat turns stay tiny — they send a URI, not megabytes.
-
-Dev and production serve the *same* handlers (`server/handlers.js`) through two
-thin adapters — `server/aiProxy.js` for `vite dev`, `netlify/functions/*.mjs`
-for the deployed site — so the two can't drift apart.
+**Deployed-upload size limit:** since bytes pass through the server,
+serverless request-body caps apply (~6MB on Netlify — roughly a 4MB file
+before base64 expansion). Local dev has no such limit.
 
 ## Deploying
 

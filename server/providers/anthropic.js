@@ -49,10 +49,10 @@ export function createAnthropicProvider(env) {
 
     /**
      * Anthropic has its own Files API, but this adapter keeps documents inline
-     * so the fallback provider stays dependency-light. The client is told
-     * 'inline' and sends bytes with each request instead of uploading once.
+     * so the fallback provider stays dependency-light: the client holds the
+     * bytes and sends them with each request instead of uploading once.
      */
-    async startUpload() {
+    async uploadDocument() {
       return { mode: 'inline' };
     },
 

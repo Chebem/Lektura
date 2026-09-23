@@ -40,15 +40,16 @@ export function createGeminiProvider(env) {
 
     /** Retries transient upstream failures with exponential backoff. */
     /**
-     * Mints a resumable-upload URL for the browser to POST bytes to directly.
+     * Uploads a document to the Files API and returns a reference to it.
      *
-     * The returned URL carries an upload token but NOT the API key, so it is
-     * safe to hand to the client. This matters because it keeps multi-megabyte
-     * PDFs from passing through the serverless function at all — Netlify caps
-     * function request bodies around 6MB, which a 5.6MB PDF exceeds once
-     * base64-encoded.
+     * This runs server-side rather than letting the browser upload directly.
+     * A direct upload looked attractive (it would dodge serverless body
+     * limits), and the CORS *preflight* does pass — but the actual upload
+     * response carries no Access-Control-Allow-Origin header, so the browser
+     * refuses to read it and fetch() rejects. Preflight success is not
+     * sufficient; the real response must be readable too.
      */
-    async startUpload({ name, mimeType, size }) {
+    async uploadDocument({ name, mimeType, base64 }) {
       if (!apiKey) {
         throw Object.assign(new Error('GEMINI_API_KEY is not set.'), {
           status: 503,
@@ -56,31 +57,34 @@ export function createGeminiProvider(env) {
         });
       }
 
-      const response = await fetch(`${UPLOAD_ENDPOINT}/v1beta/files`, {
+      const bytes = Buffer.from(base64, 'base64');
+
+      // 1. Start a resumable session.
+      const start = await fetch(`${UPLOAD_ENDPOINT}/v1beta/files`, {
         method: 'POST',
         headers: {
           'x-goog-api-key': apiKey,
           'X-Goog-Upload-Protocol': 'resumable',
           'X-Goog-Upload-Command': 'start',
-          'X-Goog-Upload-Header-Content-Length': String(size),
+          'X-Goog-Upload-Header-Content-Length': String(bytes.length),
           'X-Goog-Upload-Header-Content-Type': mimeType,
           'content-type': 'application/json',
         },
         body: JSON.stringify({ file: { display_name: name } }),
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
+      if (!start.ok) {
+        const payload = await start.json().catch(() => null);
         throw Object.assign(
           new Error(
             payload?.error?.message ||
-              `Could not start the upload (HTTP ${response.status}).`,
+              `Could not start the upload (HTTP ${start.status}).`,
           ),
-          { status: response.status },
+          { status: start.status },
         );
       }
 
-      const uploadUrl = response.headers.get('x-goog-upload-url');
+      const uploadUrl = start.headers.get('x-goog-upload-url');
       if (!uploadUrl) {
         throw Object.assign(
           new Error('The upload service did not return an upload URL.'),
@@ -88,7 +92,38 @@ export function createGeminiProvider(env) {
         );
       }
 
-      return { mode: 'resumable', uploadUrl };
+      // 2. Send the bytes and finalize.
+      const upload = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'X-Goog-Upload-Offset': '0',
+          'X-Goog-Upload-Command': 'upload, finalize',
+          'content-type': mimeType,
+        },
+        body: bytes,
+      });
+
+      if (!upload.ok) {
+        throw Object.assign(
+          new Error(`The upload failed (HTTP ${upload.status}).`),
+          { status: upload.status },
+        );
+      }
+
+      const result = await upload.json().catch(() => null);
+      const uri = result?.file?.uri;
+
+      if (!uri) {
+        throw Object.assign(
+          new Error('The upload finished but returned no file reference.'),
+          { status: 502 },
+        );
+      }
+
+      return {
+        mode: 'file',
+        file: { uri, mimeType: result.file.mimeType || mimeType },
+      };
     },
 
     async generate(options) {

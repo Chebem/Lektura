@@ -41,14 +41,20 @@ export function handleHealth(provider) {
 }
 
 /**
- * Returns an upload target for the browser.
+ * Receives the document, uploads it to the provider, and returns a reference.
  *
- * For Gemini that's a resumable-upload URL the browser POSTs bytes to
- * directly — the file never passes through this server, which sidesteps
- * serverless request-body limits entirely.
+ * The bytes pass through this server. An earlier design had the browser
+ * upload straight to the provider to dodge serverless body limits, but the
+ * provider's upload response carries no CORS headers, so the browser cannot
+ * read it. See the note in providers/gemini.js.
+ *
+ * Consequence to be aware of: serverless hosts cap request bodies (Netlify
+ * ~6MB), so on a deployed site this path only supports files up to roughly
+ * 4MB before base64 expansion pushes them over. Large-file support needs
+ * chunked forwarding; tracked in TASK.md.
  */
-export async function handleStartUpload(provider, body) {
-  const { name, mimeType, size } = body ?? {};
+export async function handleUpload(provider, body) {
+  const { name, mimeType, data } = body ?? {};
 
   if (!mimeType || !ACCEPTED_UPLOAD_TYPES.has(mimeType)) {
     throw Object.assign(
@@ -60,18 +66,18 @@ export async function handleStartUpload(provider, body) {
     );
   }
 
-  if (!Number.isFinite(size) || size <= 0) {
-    throw Object.assign(new Error('A valid file size is required.'), {
+  if (!data || typeof data !== 'string') {
+    throw Object.assign(new Error('No file data was received.'), {
       status: 400,
     });
   }
 
   return {
     status: 200,
-    body: await provider.startUpload({
+    body: await provider.uploadDocument({
       name: name || 'document',
       mimeType,
-      size,
+      base64: data,
     }),
   };
 }

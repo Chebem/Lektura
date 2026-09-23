@@ -122,56 +122,34 @@ function fileToBase64(file) {
 }
 
 /**
- * Asks the server for an upload target, then sends the bytes wherever it says.
+ * Sends the document to our server, which uploads it to the AI provider and
+ * returns a reference used by every later call.
  *
- * For Gemini the server returns a resumable-upload URL that carries an upload
- * token but no API key, and the browser POSTs the bytes straight to Google.
- * The file never passes through our own server, which is what makes this work
- * on a serverless host — Netlify caps function request bodies near 6MB, and a
- * 5.6MB PDF exceeds that once base64-encoded.
+ * The bytes go through our server rather than straight to the provider: the
+ * provider's upload endpoint passes CORS preflight but its actual response
+ * carries no Access-Control-Allow-Origin header, so a browser upload can
+ * never read the result.
  *
- * Returns a `source` descriptor to hand to every later AI call.
+ * Returns a `source` descriptor to hand to every AI call.
  */
 async function uploadBlob({ name, mimeType, blob }) {
-  const size = blob.size;
+  const data = await fileToBase64(blob);
 
-  const target = await postJson('/api/documents', { name, mimeType, size });
+  const result = await postJson('/api/documents', { name, mimeType, data });
 
-  // Providers without direct upload (the Anthropic adapter) ask for the bytes
-  // to ride along with each request instead.
-  if (target.mode === 'inline') {
-    const data = await fileToBase64(blob);
-    return { kind: 'inline', name, mimeType, size, document: { data, mimeType } };
+  // Providers without a Files API (the Anthropic adapter) want the bytes to
+  // ride along with each request instead.
+  if (result.mode === 'inline') {
+    return {
+      kind: 'inline',
+      name,
+      mimeType,
+      size: blob.size,
+      document: { data, mimeType },
+    };
   }
 
-  if (!target.uploadUrl) {
-    throw new AiError('The server did not return an upload target.');
-  }
-
-  let response;
-  try {
-    response = await fetch(target.uploadUrl, {
-      method: 'POST',
-      headers: {
-        'X-Goog-Upload-Offset': '0',
-        'X-Goog-Upload-Command': 'upload, finalize',
-      },
-      body: blob,
-    });
-  } catch {
-    throw new AiError('The upload did not reach the AI service.', {
-      hint: 'Check your connection and try again.',
-    });
-  }
-
-  if (!response.ok) {
-    throw new AiError(`The upload failed (HTTP ${response.status}).`);
-  }
-
-  const payload = await response.json().catch(() => null);
-  const uri = payload?.file?.uri;
-
-  if (!uri) {
+  if (!result.file?.uri) {
     throw new AiError('The upload finished but no file reference came back.');
   }
 
@@ -179,8 +157,8 @@ async function uploadBlob({ name, mimeType, blob }) {
     kind: 'file',
     name,
     mimeType,
-    size,
-    file: { uri, mimeType: payload.file.mimeType || mimeType },
+    size: blob.size,
+    file: result.file,
   };
 }
 

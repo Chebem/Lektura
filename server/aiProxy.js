@@ -13,11 +13,12 @@ import { loadEnv } from 'vite';
 import {
   getProvider,
   handleHealth,
-  handleStartUpload,
+  handleUpload,
   handleAi,
 } from './handlers.js';
 
-const MAX_BODY_BYTES = 12 * 1024 * 1024;
+// Generous in dev: a base64-encoded PDF is ~1.37x its file size.
+const MAX_BODY_BYTES = 30 * 1024 * 1024;
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -104,7 +105,7 @@ export function aiProxyPlugin() {
       };
 
       route('/api/health', (p) => handleHealth(p));
-      route('/api/documents', handleStartUpload);
+      route('/api/documents', handleUpload);
       route('/api/ai', handleAi);
     },
   };

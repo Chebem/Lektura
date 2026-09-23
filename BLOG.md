@@ -310,29 +310,48 @@ each invocation may be a different instance with different memory.
 **Concept — serverless is stateless.** Anything you put in a module-level
 variable can vanish between requests.
 
-**The solution — hand the browser a tokenised upload URL:**
+**The attempted solution — hand the browser a tokenised upload URL.** Let the
+function mint a resumable-upload URL and have the browser send bytes straight
+to Google, so the file never touches our server.
 
-```
-browser ──POST /api/documents──▶ function mints a resumable upload URL
-                                  (holds the key; URL contains none)
-browser ───────bytes───────────▶ Google's upload endpoint (direct)
-browser ──POST /api/ai─────────▶ function generates, citing the file URI
-```
-
-The file never touches our server, so the 6MB limit is irrelevant. Chat turns
-then carry a URI instead of megabytes.
-
-**Concept — verify the risky assumptions before building on them.** Three
-things had to be true, and each was tested first:
+Three things had to be true, and we tested each before building:
 
 1. Does the minted URL contain the API key? → **No.** Safe for the browser.
-2. Will the browser be *allowed* to upload cross-origin? → CORS preflight
-   returned `access-control-allow-origin` for our exact site origin. **Yes.**
-3. Can the model generate from a file URI? → Uploaded a tiny file, asked a
-   question with a known answer, got it right. **Yes.**
+2. Will the browser be allowed to upload cross-origin? → CORS preflight
+   returned `access-control-allow-origin` for our exact origin. **Yes.**
+3. Can the model generate from a file URI? → **Yes**, verified with a known
+   answer.
 
-Building first and discovering a CORS wall afterwards would have wasted the
-whole design.
+We built it. It failed in the browser with "the upload did not reach the AI
+service."
+
+**Why — and this is the lesson.** CORS is *two* checks, not one. The preflight
+passed, so the request was sent. But the **actual upload response carried no
+`Access-Control-Allow-Origin` header**, so the browser refused to let us read
+it and `fetch()` rejected. The upload may even have succeeded server-side; we
+could never see the result.
+
+Worse, the evidence had already been captured and misread. An earlier test
+printed the real POST's headers:
+
+```
+HTTP/2 200
+content-type: application/json; charset=UTF-8
+```
+
+`200` looked like a pass. The *absence* of the CORS header was the finding,
+and absence is easy to skim past when you're looking for a status code.
+
+**Concept — verify the whole path, not the handshake.** "Preflight passes"
+answers *may I send this?* It does not answer *may I read the reply?* For a
+cross-origin request you need both, and only the second one gets you data.
+
+**What we shipped instead.** The bytes go through our own server, which
+uploads to the Files API and returns a reference. Simple, works, and no CORS
+involved. The cost is real and documented: serverless hosts cap request
+bodies (~6MB on Netlify), so deployed uploads are limited to roughly 4MB
+before base64 expansion pushes them over. Fixing that properly means
+forwarding the file in chunks — tracked, not pretended away.
 
 This also fixed a dev-only bug for free: restarting the dev server used to
 lose the document ("That document is no longer on the server").
@@ -416,6 +435,10 @@ before a line of the feature was written. That is the difference between a
 
 **Your tools lie too.** Two "bugs" during the blank-screen hunt were broken
 test harness, not broken app.
+
+**Testing the wrong half is worse than not testing.** We verified the CORS
+preflight and shipped a design the browser could never read the response
+from. A partial check produced false confidence.
 
 **Contain failures.** The blank screen wasn't really about pdf.js. It was
 about an app where one throw anywhere killed everything.

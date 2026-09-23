@@ -70,24 +70,27 @@ server/handlers.js          ← all real behaviour lives here
 Dev and production share the handlers so they cannot drift apart. The
 adapters only translate HTTP plumbing.
 
-### Documents upload straight to the provider
+### Document upload
 
 ```
-browser ──POST /api/documents──▶ server mints a resumable upload URL
-                                  (holds the key; URL contains none)
-browser ───────bytes───────────▶ provider's upload endpoint (direct)
-browser ──POST /api/ai─────────▶ server generates, citing the file URI
+browser ──POST /api/documents (base64)──▶ server uploads to the Files API
+                                           and returns { uri, mimeType }
+browser ──POST /api/ai───────────────────▶ server generates, citing the URI
 ```
 
-Two reasons it works this way rather than proxying the file:
+The document is uploaded once and referenced by URI afterwards, so chat turns
+carry a reference rather than megabytes.
 
-1. Serverless hosts cap request bodies (Netlify ~6MB); a 5.6MB PDF exceeds
-   that once base64-encoded, so proxying would simply fail.
-2. Chat turns then send a URI instead of megabytes.
+An earlier design had the browser upload **directly** to the provider, to
+dodge serverless request-body limits. It does not work: the provider's upload
+endpoint passes CORS preflight, but its actual response carries no
+`Access-Control-Allow-Origin` header, so the browser cannot read the result
+and `fetch()` rejects. Preflight success is not sufficient.
 
-Verified before building: the minted URL carries an upload token but no API
-key, CORS preflight passes for the site origin, and generation against a file
-URI returns correct answers.
+**Known limit:** because bytes now pass through the server, deployed uploads
+are bounded by the host's request-body cap (~6MB on Netlify), i.e. roughly
+4MB of file before base64 expansion. Local dev has no such limit. Chunked
+forwarding is the fix; see `TASK.md`.
 
 ### Provider adapter
 
