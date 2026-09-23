@@ -1,0 +1,70 @@
+/* App header: brand, document name, theme toggle, upload, profile and tabs.
+   Moved out of layout.css so the styles sit with the component. */
+
+.app__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  max-width: 1680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: auto;
+  min-width: 0;
+}
+
+.app__logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--accent-solid);
+  color: var(--text-on-accent);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: var(--shadow-accent);
+}
+
+.app__title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.app__subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+  .app__bar {
+    padding: var(--space-3) var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .app__subtitle {
+    display: none;
+  }
+}

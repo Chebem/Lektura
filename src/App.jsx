@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import StudyProfile from './components/StudyProfile/StudyProfile.jsx';
-import TabSwitcher from './components/TabSwitcher/TabSwitcher.jsx';
+import { useCallback, useEffect, useState } from 'react';
+import AppHeader from './components/AppHeader/AppHeader.jsx';
 import PdfViewer from './components/PdfViewer/PdfViewer.jsx';
 import TranslationPanel from './components/TranslationPanel/TranslationPanel.jsx';
 import ChatbotPanel from './components/ChatbotPanel/ChatbotPanel.jsx';
@@ -60,8 +59,6 @@ export default function App() {
   const [showChat, setShowChat] = useState(true);
   const [theme, setTheme] = useState(null);
   const [provider, setProvider] = useState(null);
-
-  const fileInputRef = useRef(null);
 
   const profileComplete = Boolean(profile.koreanLevel && profile.learningGoal);
   const ready = Boolean(source && profileComplete);
@@ -200,70 +197,22 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app__header">
-        <div className="app__bar">
-          <div className="app__brand">
-            <span className="app__logo" aria-hidden="true">
-              S
-            </span>
-            <div>
-              <div className="app__title">Lektura</div>
-              <div className="app__subtitle">
-                {docMeta
-                  ? `${docMeta.name}${
-                      docMeta.pageCount ? ` · ${docMeta.pageCount} pages` : ''
-                    }`
-                  : 'Translate and study your course PDFs'}
-              </div>
-            </div>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf"
-            hidden
-            onChange={handleFileChosen}
-          />
-
-          <HoverButton
-            variant="ghost"
-            size="sm"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title="Toggle light and dark theme"
-            aria-label="Toggle light and dark theme"
-          >
-            {theme === 'dark' ? 'Light' : 'Dark'}
-          </HoverButton>
-
-          <HoverButton
-            variant="accent"
-            size="sm"
-            busy={uploading}
-            disabled={!profileComplete}
-            title={
-              profileComplete
-                ? 'Upload a course PDF'
-                : 'Set your study profile first'
-            }
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {file ? 'Replace PDF' : 'Upload PDF'}
-          </HoverButton>
-        </div>
-
-        <StudyProfile
-          profile={profile}
-          onChange={setProfile}
-          locked={Boolean(translation.data || flashcards.data || quiz.data)}
-        />
-
-        <TabSwitcher
-          tabs={tabsWithBadges}
-          activeId={activeTab}
-          onChange={setActiveTab}
-        />
-      </header>
+      <AppHeader
+        documentName={docMeta?.name}
+        pageCount={docMeta?.pageCount}
+        profile={profile}
+        onProfileChange={setProfile}
+        profileComplete={profileComplete}
+        profileLocked={Boolean(translation.data || flashcards.data || quiz.data)}
+        hasDocument={Boolean(file)}
+        uploading={uploading}
+        onFileChosen={handleFileChosen}
+        theme={theme}
+        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        tabs={tabsWithBadges}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       {provider && !provider.configured ? (
         <div className="app__banner" role="status">
