@@ -48,6 +48,23 @@ file before base64 expansion. Local dev is unaffected.
 
 ## 🟡 Next up
 
+### Match the prototype (see FEATURES.md)
+Full gap analysis and page structure in `.CLAUDE/FEATURES.md`. Phased so each
+step ships on its own:
+- [ ] **Phase 1 — richer cards:** category, exam-priority flag, romanization,
+      structured Korean/English example, filter chips with counts, search,
+      mastery tracking, grid/stack toggle
+- [ ] **Phase 2 — Scope Summary:** one short call describing what the document
+      covers plus a study tip
+- [ ] **Phase 3 — conversational Quiz Tutor:** replaces the flip-card quiz.
+      Also *fixes deployment* — one question per turn is seconds, while
+      generating 18 at once takes ~68s and cannot fit Netlify's 10s cap
+- [ ] **Phase 4 — three more preference dials:** available study time, exam
+      deadline, preferred support language
+- [ ] **Phase 5 — polish:** document hero banner, per-card TTS (Web Speech
+      API), bookmarks, prompt-template inspector
+
+
 ### Multi-format upload (docx / pptx)
 Currently PDF only. All of the user's test files are modern ZIP-based Office
 formats, so all are parseable. Gemini has no native Word/PowerPoint support,
@@ -70,8 +87,6 @@ the server and prompt templates already accept that path.
 ### Finish the rename
 `StudyBridge` → `Lektura` is partially applied (page title and chat panel
 only). Remaining:
-- [ ] `src/data/promptTemplates.js` — **user-visible**: the chatbot's system
-      prompt says "You are the StudyBridge study assistant"
 - [ ] `src/App.jsx`, `src/lib/aiClient.js`, `src/components/ChatbotPanel/`,
       `src/components/ErrorBoundary/`, `server/aiProxy.js` (comments/strings)
 - [ ] `README.md`

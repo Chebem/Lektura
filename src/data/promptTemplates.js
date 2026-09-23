@@ -168,7 +168,7 @@ ${materialBlock(courseMaterial)}`;
 // --- 4.2 Chatbot -----------------------------------------------------------
 
 export function chatbotSystemPrompt(profile, courseMaterial) {
-  return `You are the StudyBridge study assistant. Answer questions about the course
+  return `You are the Lektura study assistant. Answer questions about the course
 material. ${GROUNDING_RULE} If the answer cannot be found in the material,
 clearly say the information is not available in the provided material instead
 of guessing.
