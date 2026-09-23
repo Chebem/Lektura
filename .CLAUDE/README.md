@@ -39,13 +39,43 @@ browser  ──POST /api/ai──▶  Vite dev middleware  ──▶  Gemini API
                              attaches the key)
 ```
 
-The uploaded PDF is posted once to `/api/documents`, held in a server-side Map,
-and referenced by id afterwards — so chat turns stay small instead of
-re-uploading megabytes each time.
+The document is uploaded **once, straight from the browser to the AI
+provider**, and referenced by URI after that:
 
-**Deployment caveat:** this middleware runs under `npm run dev` only. A static
-`npm run build` has no server, so deploying for real means re-hosting
-`server/aiProxy.js` as a serverless function. That was out of scope for the MVP.
+```
+browser ──POST /api/documents──▶ function mints a resumable upload URL
+                                  (holds the key; the URL contains no key)
+browser ──────bytes────────────▶ provider's upload endpoint (direct)
+browser ──POST /api/ai────────▶ function generates, citing the file URI
+```
+
+Two reasons it works this way rather than proxying the file:
+
+- Serverless hosts cap function request bodies (Netlify ~6MB). A 5.6MB PDF
+  exceeds that once base64-encoded, so proxying it would simply fail.
+- Chat turns stay tiny — they send a URI, not megabytes.
+
+Dev and production serve the *same* handlers (`server/handlers.js`) through two
+thin adapters — `server/aiProxy.js` for `vite dev`, `netlify/functions/*.mjs`
+for the deployed site — so the two can't drift apart.
+
+## Deploying
+
+The repo is Netlify-ready (`netlify.toml`): build `npm run build`, publish
+`dist`, functions in `netlify/functions`.
+
+**Set the key in the host, not in the repo.** In Netlify: Site configuration →
+Environment variables → add `GEMINI_API_KEY`. `.env` is gitignored and is
+never part of a deploy; `.env.example` is the committed template. Then
+redeploy so the functions pick it up.
+
+Routing note: `netlify.toml` matches `/api/*` **before** the SPA catch-all. Get
+that order wrong and `/*  → /index.html` swallows the API, so every AI call
+returns the HTML shell with a 404 — which is exactly how the first deploy of
+this app failed.
+
+Files uploaded to Gemini's Files API expire after about 48 hours. That's well
+beyond a study session, and a refresh re-uploads, so nothing needs cleaning up.
 
 ## Switching the AI provider
 
