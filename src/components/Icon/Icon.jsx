@@ -1,29 +1,30 @@
 import { Lineicons } from '@lineiconshq/react-lineicons';
 import {
-  Sun1OutlinedRounded,
-  MoonHalfRight5OutlinedRounded,
-  CloudUploadOutlinedRounded,
-  ChevronLeftOutlinedRounded,
-  ChevronDownOutlinedRounded,
-  PlusOutlinedRounded,
-  MinusOutlinedRounded,
-  Search1OutlinedRounded,
-  XmarkOutlinedRounded,
-  MenuHamburger1OutlinedRounded,
-  StarFatOutlinedRounded,
-  Book1OutlinedRounded,
-  MicroscopeOutlinedRounded,
-  Message2OutlinedRounded,
-  Pencil1OutlinedRounded,
-  Bulb2OutlinedRounded,
-  CheckOutlinedRounded,
-  QuestionMarkCircleOutlinedRounded,
-  Bolt2OutlinedRounded,
-  DashboardSquare1OutlinedRounded,
-  Layout9OutlinedRounded,
-  FileMultipleOutlinedRounded,
-  Trophy1OutlinedRounded,
-  EyeOutlinedRounded,
+  Sun1Outlined,
+  MoonHalfRight5Outlined,
+  CloudUploadOutlined,
+  ChevronLeftOutlined,
+  ChevronRightOutlined,
+  ChevronDownOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  Search1Outlined,
+  XmarkOutlined,
+  MenuHamburger1Outlined,
+  StarFatOutlined,
+  Book1Outlined,
+  MicroscopeOutlined,
+  Message2Outlined,
+  Pencil1Outlined,
+  Bulb2Outlined,
+  CheckOutlined,
+  QuestionMarkCircleOutlined,
+  Bolt2Outlined,
+  DashboardSquare1Outlined,
+  Layout9Outlined,
+  FileMultipleOutlined,
+  Trophy1Outlined,
+  EyeOutlined,
 } from '@lineiconshq/free-icons';
 import './Icon.css';
 
@@ -32,48 +33,50 @@ import './Icon.css';
  *
  * Components ask for a role ("next", "upload") rather than a Lineicons
  * export name, so swapping or renaming the icon set is a change to this file
- * alone. It also papers over gaps in the free set — there is no
- * ChevronRight, so "next" is a left chevron rotated 180°.
+ * alone.
+ *
+ * Note on versions: @lineiconshq/free-icons v1.0.7 exports IconData objects
+ * ({name, svg, viewBox, …}) with unsuffixed names, which is what <Lineicons>
+ * expects. An older 0.0.1 copy sits nested under react-lineicons and exports
+ * React components named with a "Rounded" suffix — importing those names
+ * here yields undefined and makes <Lineicons> throw on icon.svg.
  */
 const ICONS = {
   // chrome
-  sun: Sun1OutlinedRounded,
-  moon: MoonHalfRight5OutlinedRounded,
-  upload: CloudUploadOutlinedRounded,
-  menu: MenuHamburger1OutlinedRounded,
-  close: XmarkOutlinedRounded,
-  search: Search1OutlinedRounded,
+  sun: Sun1Outlined,
+  moon: MoonHalfRight5Outlined,
+  upload: CloudUploadOutlined,
+  menu: MenuHamburger1Outlined,
+  close: XmarkOutlined,
+  search: Search1Outlined,
 
   // navigation
-  prev: ChevronLeftOutlinedRounded,
-  next: ChevronLeftOutlinedRounded, // rotated — see `rotate` below
-  down: ChevronDownOutlinedRounded,
+  prev: ChevronLeftOutlined,
+  next: ChevronRightOutlined,
+  down: ChevronDownOutlined,
 
   // controls
-  zoomIn: PlusOutlinedRounded,
-  zoomOut: MinusOutlinedRounded,
-  grid: DashboardSquare1OutlinedRounded,
-  stack: Layout9OutlinedRounded,
+  zoomIn: PlusOutlined,
+  zoomOut: MinusOutlined,
+  grid: DashboardSquare1Outlined,
+  stack: Layout9Outlined,
 
   // card categories
-  vocab: Book1OutlinedRounded,
-  terminology: MicroscopeOutlinedRounded,
-  pattern: Message2OutlinedRounded,
-  grammar: Pencil1OutlinedRounded,
-  concept: Bulb2OutlinedRounded,
-  exam: StarFatOutlinedRounded,
+  vocab: Book1Outlined,
+  terminology: MicroscopeOutlined,
+  pattern: Message2Outlined,
+  grammar: Pencil1Outlined,
+  concept: Bulb2Outlined,
+  exam: StarFatOutlined,
 
   // states
-  document: FileMultipleOutlinedRounded,
-  cards: Bolt2OutlinedRounded,
-  quiz: QuestionMarkCircleOutlinedRounded,
-  known: CheckOutlinedRounded,
-  score: Trophy1OutlinedRounded,
-  view: EyeOutlinedRounded,
+  document: FileMultipleOutlined,
+  cards: Bolt2Outlined,
+  quiz: QuestionMarkCircleOutlined,
+  known: CheckOutlined,
+  score: Trophy1Outlined,
+  view: EyeOutlined,
 };
-
-/** Icons that need rotating because the free set has no mirrored variant. */
-const ROTATED = { next: 180 };
 
 export default function Icon({ name, size = 18, className = '', ...rest }) {
   const icon = ICONS[name];
@@ -84,14 +87,11 @@ export default function Icon({ name, size = 18, className = '', ...rest }) {
     return null;
   }
 
-  const rotate = ROTATED[name];
-
   return (
     <Lineicons
       icon={icon}
       size={size}
       className={`icon ${className}`.trim()}
-      style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}
       aria-hidden="true"
       focusable="false"
       {...rest}

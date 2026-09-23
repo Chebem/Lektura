@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "checkJs": false
+  },
+  "include": ["src", "server", "netlify", "types"],
+  "exclude": ["node_modules", "dist"]
+}

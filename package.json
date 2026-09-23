@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lineiconshq/free-icons": "^1.0.7",
     "@lineiconshq/react-lineicons": "^1.0.5",
     "pdfjs-dist": "^6.3.289",
     "react": "^19.3.0",
