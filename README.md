@@ -24,7 +24,7 @@ cp .env.example .env
 # then paste your key into GEMINI_API_KEY=
 ```
 
-Get a free key at <https://aistudio.google.com/apikey> — no credit card. Without
+Get a free key at <https://aistudio.google.com/apikey>: no credit card. Without
 a key the app still loads and the PDF viewer works; the AI panels explain
 what's missing instead of failing silently.
 
@@ -48,7 +48,7 @@ CORS preflight but its actual response carries no `Access-Control-Allow-Origin`
 header, so the browser cannot read the result.
 
 **Deployed-upload size limit:** since bytes pass through the server,
-serverless request-body caps apply (~6MB on Netlify — roughly a 4MB file
+serverless request-body caps apply (~6MB on Netlify, roughly a 4MB file
 before base64 expansion). Local dev has no such limit.
 
 ## Deploying
@@ -61,7 +61,7 @@ Environment variables → add `GEMINI_API_KEY`. `.env` is gitignored and is
 never part of a deploy; `.env.example` is the committed template. Then
 redeploy so the functions pick it up.
 
-Routing note: `netlify.toml` matches `/api/*` **before** the SPA catch-all. Get
+Routing note: `netlify.toml` matches `/api/*` **before** the SPA catch all. Get
 that order wrong and `/*  → /index.html` swallows the API, so every AI call
 returns the HTML shell with a 404 — which is exactly how the first deploy of
 this app failed.
@@ -131,7 +131,7 @@ Both fields are required before upload is enabled, because every AI call
 receives them and generating anything earlier would bake in the wrong
 personalization. They are two independent dials:
 
-- **Korean proficiency** (11 options incl. TOPIK 1–6) → language complexity.
+- **Korean proficiency** (11 options incl. TOPIK 1–6), language complexity.
   TOPIK 1–2 ≈ Beginner/Elementary, 3–4 ≈ Intermediate/Upper-Intermediate,
   5–6 ≈ Advanced.
 - **Learning goal** (8 options) → content emphasis.
@@ -140,7 +140,7 @@ personalization. They are two independent dials:
 
 Roughly 10–15 requests/minute and ~250/day. One upload costs 3 generation
 calls plus a call per chat turn, so that's ample for study and demos. The
-provider retries `429`/`503` three times with exponential backoff — the free
+provider retries `429`/`503` three times with exponential backoff, the free
 tier returns "high demand" often enough that a single attempt makes the long
 generations look broken when they aren't.
 
