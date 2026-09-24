@@ -6,7 +6,7 @@
  * server-side. That's why these are relative URLs.
  *
  * Every function: builds its prompt from data/promptTemplates.js, strips
- * markdown fences defensively, parses JSON in a try/catch, and throws an
+ * markdowns fences defensively, parses JSON in a try/catch, and throws an
  * `AiError` carrying a message the UI can show a student verbatim.
  */
 
