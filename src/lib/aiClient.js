@@ -35,7 +35,7 @@ async function postJson(url, body) {
       body: JSON.stringify(body),
     });
   } catch (cause) {
-    throw new AiError('Could not reach the StudyBridge server.', {
+    throw new AiError('Could not reach Lektura server.', {
       hint: 'Is the dev server still running?',
     });
   }
