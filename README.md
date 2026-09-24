@@ -1,7 +1,7 @@
 # Lektura
 
-Upload the course PDFs your professors post to the university portal — lecture
-notes, slides, readings — and get an English translation, a chatbot grounded in
+Upload the course PDFs your professors post to the university portal, lecture
+notes, slides, readings, and get an English translation, a chatbot grounded in
 the document, flashcards, and a quiz. Everything is personalized to a study
 profile you set once.
 
