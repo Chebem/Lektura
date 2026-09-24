@@ -5,8 +5,8 @@ notes, slides, readings, and get an English translation, a chatbot grounded in
 the document, flashcards, and a quiz. Everything is personalized to a study
 profile you set once.
 
-Built as a 4-hour MVP. No accounts, no database: the session lives in memory
-and a refresh resets it, by design.
+Built as a 4-hour MVP, For AWS AI Beyond Coding  
+No accounts, no database: the session lives in memory and a refresh resets it, by design.
 
 ## Run it
 
