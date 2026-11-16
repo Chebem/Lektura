@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AppHeader from './components/AppHeader/AppHeader.jsx';
 import PdfViewer from './components/PdfViewer/PdfViewer.jsx';
 import TranslationPanel from './components/TranslationPanel/TranslationPanel.jsx';
@@ -7,6 +7,8 @@ import TutorPanel from './components/TutorPanel/TutorPanel.jsx';
 import PaneBar, { PANES } from './components/PaneBar/PaneBar.jsx';
 import HoverButton from './components/HoverButton/HoverButton.jsx';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx';
+import Landing from './components/Landing/Landing.jsx';
+import { ROUTES, useRoute } from './lib/useRoute.js';
 import {
   checkProvider,
   uploadPdf,
@@ -60,6 +62,8 @@ export default function App() {
   const [theme, setTheme] = useState(null);
   const [provider, setProvider] = useState(null);
 
+  const [path, navigate] = useRoute();
+
   const profileComplete = Boolean(profile.koreanLevel && profile.learningGoal);
   const ready = Boolean(source && profileComplete);
 
@@ -83,13 +87,27 @@ export default function App() {
     checkProvider().then(setProvider);
   }, []);
 
+  // --- Routing ---------------------------------------------------------------
+  // The workspace has nothing to show without a document, and the session is
+  // in memory only — so a refresh on /study lands back on the upload page.
+  const onStudyRoute = path === ROUTES.study;
+  useEffect(() => {
+    if (onStudyRoute && !source && !uploading) {
+      navigate(ROUTES.home, { replace: true });
+    }
+  }, [onStudyRoute, source, uploading, navigate]);
+
   // --- Upload --------------------------------------------------------------
   async function handleFileChosen(event) {
     const chosen = event.target.files?.[0];
     // Reset the input so re-picking the same file still fires a change event.
     event.target.value = '';
     if (!chosen) return;
+    await uploadFile(chosen);
+  }
 
+  /** Uploads and resets the session; resolves true on success. */
+  async function uploadFile(chosen) {
     setUploading(true);
     setUploadError(null);
 
@@ -105,8 +123,10 @@ export default function App() {
       setAskMessages([]);
       setQuizMessages([]);
       setQuizTurn(null);
+      return true;
     } catch (error) {
       setUploadError(error);
+      return false;
     } finally {
       setUploading(false);
     }
@@ -138,6 +158,18 @@ export default function App() {
     () => run(setFlashcards, () => getFlashcards(source, profile)),
     [run, source, profile],
   );
+
+  // Translation is the first thing every student wants, so start it as soon
+  // as the workspace opens on a new document instead of waiting for a click.
+  // The ref keys on the source so a re-render or StrictMode re-run can't
+  // fire it twice, and a failed run waits for the student's retry.
+  const autoTranslated = useRef(null);
+  useEffect(() => {
+    if (!onStudyRoute || !ready || autoTranslated.current === source) return;
+    if (translation.status !== 'idle') return;
+    autoTranslated.current = source;
+    generateTranslation();
+  }, [onStudyRoute, ready, source, translation.status, generateTranslation]);
 
   // --- Tutor ---------------------------------------------------------------
   const isQuiz = tutorMode === 'quiz';
@@ -327,9 +359,30 @@ export default function App() {
     );
   }
 
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  if (!onStudyRoute || !source) {
+    return (
+      <Landing
+        profile={profile}
+        onProfileChange={setProfile}
+        uploading={uploading}
+        uploadError={uploadError}
+        onUpload={async (chosen) => {
+          if (await uploadFile(chosen)) navigate(ROUTES.study);
+        }}
+        hasDocument={Boolean(source)}
+        onResume={() => navigate(ROUTES.study)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+    );
+  }
+
   return (
     <div className="app">
       <AppHeader
+        onHome={() => navigate(ROUTES.home)}
         documentName={docMeta?.name}
         pageCount={docMeta?.pageCount}
         profile={profile}
@@ -340,7 +393,7 @@ export default function App() {
         uploading={uploading}
         onFileChosen={handleFileChosen}
         theme={theme}
-        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onToggleTheme={toggleTheme}
       >
         <PaneBar
           layout={layout}
