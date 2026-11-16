@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import StudyProfile from '../StudyProfile/StudyProfile.jsx';
+import ProfileChip from '../ProfileChip/ProfileChip.jsx';
 import HoverButton from '../HoverButton/HoverButton.jsx';
 import Icon from '../Icon/Icon.jsx';
 import './AppHeader.css';
@@ -24,6 +24,7 @@ export default function AppHeader({
   onFileChosen,
   theme,
   onToggleTheme,
+  onHome,
   children,
 }) {
   const fileInputRef = useRef(null);
@@ -32,9 +33,15 @@ export default function AppHeader({
     <header className="app__header">
       <div className="app__bar">
         <div className="app__brand">
-          <span className="app__logo" aria-hidden="true">
-            L
-          </span>
+          <button
+            type="button"
+            className="app__home"
+            onClick={onHome}
+            title="Back to the upload page"
+            aria-label="Lektura home"
+          >
+            <img src="/lektura-logo.png" alt="" className="app__logo" />
+          </button>
           <div>
             <div className="app__title">Lektura</div>
             <div className="app__subtitle">
@@ -53,15 +60,19 @@ export default function AppHeader({
           onChange={onFileChosen}
         />
 
+        <ProfileChip
+          profile={profile}
+          onChange={onProfileChange}
+          locked={profileLocked}
+        />
+
         <HoverButton
-          variant="ghost"
-          size="sm"
+          variant="quiet"
           onClick={onToggleTheme}
-          title="Toggle light and dark theme"
-          aria-label="Toggle light and dark theme"
-          icon={<Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />}
+          title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
         >
-          {theme === 'dark' ? 'Light' : 'Dark'}
+          <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />
         </HoverButton>
 
         <HoverButton
@@ -80,12 +91,6 @@ export default function AppHeader({
           {hasDocument ? 'Replace document' : 'Upload document'}
         </HoverButton>
       </div>
-
-      <StudyProfile
-        profile={profile}
-        onChange={onProfileChange}
-        locked={profileLocked}
-      />
 
       {children}
     </header>
