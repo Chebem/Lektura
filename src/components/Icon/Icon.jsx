@@ -25,6 +25,9 @@ import {
   FileMultipleOutlined,
   Trophy1Outlined,
   EyeOutlined,
+  SparkOutlined,
+  ArrowRightOutlined,
+  Comment1TextOutlined,
 } from '@lineiconshq/free-icons';
 import './Icon.css';
 
@@ -76,6 +79,11 @@ const ICONS = {
   known: CheckOutlined,
   score: Trophy1Outlined,
   view: EyeOutlined,
+
+  // landing
+  spark: SparkOutlined,
+  arrow: ArrowRightOutlined,
+  chat: Comment1TextOutlined,
 };
 
 export default function Icon({ name, size = 18, className = '', ...rest }) {

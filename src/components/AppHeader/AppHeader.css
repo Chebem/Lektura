@@ -27,18 +27,20 @@
   min-width: 0;
 }
 
-.app__logo {
+.app__home {
   display: grid;
-  place-items: center;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.app__logo {
   width: 32px;
   height: 32px;
-  flex: none;
-  border-radius: 10px;
-  background: var(--accent-solid);
-  color: var(--text-on-accent);
-  font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 700;
+  border-radius: 9px;
   box-shadow: var(--shadow-accent);
 }
 
